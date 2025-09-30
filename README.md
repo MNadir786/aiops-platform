@@ -3,83 +3,66 @@
 ---
 
 ## 🚀 Overview  
+
 The **AIOps Platform** blends **DevOps** and **AI (AIOps)** to create a secure, intelligent, and self-optimizing cloud system.  
 
-This project demonstrates:  
-- ⚙️ CI/CD pipelines with GitHub Actions & Trivy.  
-- ☁️ AWS-native infrastructure (EKS, ECR, RDS, S3) via Terraform.  
-- 🔒 Security-first practices with OIDC, Trivy, and AWS Secrets Manager.  
-- 🤖 AI-powered anomaly detection & log summarization.  
-- 📊 Observability with Prometheus & Grafana dashboards.  
+| Capability | Description |
+|------------|-------------|
+| ⚙️ **CI/CD Automation** | GitHub Actions pipeline with Trivy scans at every stage. |
+| ☁️ **AWS Infrastructure** | Provisioned via Terraform: EKS, ECR, RDS, S3. |
+| 🔒 **Security-First Design** | OIDC authentication, Trivy image scanning, and AWS Secrets Manager. |
+| 🤖 **AI Modules** | Predictive pipeline analysis and log summarization. |
+| 📊 **Observability** | Monitoring with Prometheus + Grafana dashboards. |
 
 ---
 
-## ✨ Capabilities  
-- ⚙️ **Automated CI/CD pipelines** with GitHub Actions & Trivy.  
-- ☁️ **AWS-native infrastructure** provisioned via Terraform.  
-- 🔒 **Security-first design** (OIDC authentication, Trivy scans, AWS Secrets Manager).  
-- 🤖 **AI modules** for predictive pipeline analysis and log triage.  
-- 📊 **Observability stack** with Prometheus + Grafana dashboards.  
+## 📊 Key Deliverables  
+
+| Deliverable | Status |
+|-------------|--------|
+| Automated CI/CD pipelines with GitHub Actions | ✅ Complete |
+| Security scanning with Trivy | ✅ Complete |
+| AWS infra via Terraform (EKS, ECR, RDS, S3) | ✅ Complete |
+| FastAPI backend + React frontend | ✅ Complete |
+| AI-assisted log summarization & anomaly detection | ✅ Complete |
+| Monitoring & observability (Prometheus + Grafana) | ✅ Complete |
 
 ---
 
 ## 🏗️ Architecture (Conceptual Flow)  
 
-1. 👨‍💻 Developer pushes code → GitHub.  
-2. ⚙️ GitHub Actions executes CI/CD (build, test, scan, deploy).  
-3. ☁️ Terraform provisions AWS resources:  
-   - EKS → FastAPI backend + React frontend.  
-   - ECR → Container registry.  
-   - RDS → Database.  
-   - S3 → Object storage.  
-4. 🔑 AWS Secrets Manager secures credentials.  
-5. 🤖 AI modules analyze pipeline results & logs.  
-6. 📊 Prometheus + Grafana provide monitoring & insights.  
-
----
-
-## 📊 Key Deliverables  
-- Automated CI/CD pipelines with GitHub Actions.  
-- Security scanning with Trivy.  
-- AWS infrastructure provisioned via Terraform (EKS, ECR, RDS, S3).  
-- FastAPI backend + React frontend.  
-- AI-assisted log summarization & anomaly detection.  
-- Monitoring and observability stack (Prometheus + Grafana).  
+| Step | Description |
+|------|-------------|
+| 👨‍💻 **Developer** | Pushes code to GitHub. |
+| ⚙️ **GitHub Actions** | Executes CI/CD workflows: build, test, scan, deploy. |
+| ☁️ **Terraform (IaC)** | Provisions AWS: EKS, ECR, RDS, S3. |
+| 🔑 **AWS Secrets Manager** | Manages credentials and sensitive configs. |
+| 🤖 **AI Modules** | Analyze pipeline results & summarize logs. |
+| 📊 **Monitoring Stack** | Prometheus & Grafana dashboards for visibility. |
 
 ---
 
 ## ▶️ Quick Start (Local Demo)  
 
-```bash
-docker-compose up --build
-🌐 Backend → http://localhost:8000/health
+| Command | Description |
+|---------|-------------|
+| `docker-compose up --build` | Start backend + frontend locally. |
+| 🌐 **Backend** | [http://localhost:8000/health](http://localhost:8000/health) |
+| 💻 **Frontend** | [http://localhost:3000](http://localhost:3000) |
 
-💻 Frontend → http://localhost:3000
+---
 
-🚀 Deployment to AWS
-Copy example variables:
+## 🚀 Deployment to AWS  
 
-bash
-Copy code
-cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
-Update values for: aws_region, aws_account_id, project_name.
+| Step | Command | Notes |
+|------|---------|-------|
+| **1. Copy Variables** | `cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars` | Update `aws_region`, `aws_account_id`, `project_name`. |
+| **2. Provision Infra** | `cd infra/terraform && terraform init && terraform apply -var-file=terraform.tfvars` | Deploys EKS, ECR, RDS, S3. |
+| **3. Update kubeconfig** | `aws eks update-kubeconfig --region <region> --name aiops-platform-eks` | Connect kubectl to EKS cluster. |
+| **4. Deploy Workloads** | `kubectl apply -f infra/k8s/` | Deploy backend & frontend apps. |
 
-Provision infrastructure:
+---
 
-bash
-Copy code
-cd infra/terraform
-terraform init
-terraform apply -var-file=terraform.tfvars
-Update kubeconfig:
+## 📜 License  
 
-bash
-Copy code
-aws eks update-kubeconfig --region <region> --name aiops-platform-eks
-Deploy workloads:
-
-bash
-Copy code
-kubectl apply -f infra/k8s/
-📜 License
-Licensed under the MIT License.
+Licensed under the **MIT License**.
