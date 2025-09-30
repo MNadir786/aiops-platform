@@ -1,43 +1,87 @@
-# AIOps Platform – DevOps Intelligence as a Service
+🌐 AIOps Platform – DevOps Intelligence as a Service
+🚀 Overview
 
-## 🚀 Overview
-This project blends **DevOps + AI (AIOps)** to showcase:
-- CI/CD pipelines with GitHub Actions & Trivy
-- AWS-native infra with Terraform (EKS, ECR, RDS, S3)
-- AI-assisted pipeline anomaly detection & log triage
-- Monitoring with Prometheus & Grafana
+The AIOps Platform blends DevOps practices with AI (AIOps) to demonstrate how modern engineering teams can:
 
-## 📂 Architecture
-```
-Dev -> GitHub -> GitHub Actions -> AWS ECR -> EKS -> FastAPI/React
-                                 |-> Trivy
-                                 |-> Terraform -> AWS infra
-                                 |-> Secrets Manager -> RDS
-                                 |-> AI modules (predict/summarize)
-```
+⚙️ Automate builds, tests, and deployments with GitHub Actions.
 
-## ⚡ Features
-- ✅ Enterprise-grade CI/CD
-- ✅ AWS-native infrastructure
-- ✅ Security-first (OIDC, Secrets Manager, Trivy)
-- ✅ Observability stack
-- ✅ AI-powered insights
+🔒 Embed security at every stage with Trivy image scanning, OIDC authentication, and AWS Secrets Manager.
 
-## ▶️ Quick Start
-```bash
+☁️ Provision AWS-native infrastructure (EKS, ECR, RDS, S3) using Terraform.
+
+🤖 Use AI modules to predict pipeline failures and summarize incident logs.
+
+📊 Gain full visibility with Prometheus + Grafana dashboards.
+
+This project is designed as a portfolio showcase and a blueprint for real-world AIOps adoption.
+
+🏗️ Architecture
+Developer → GitHub → GitHub Actions → AWS ECR → AWS EKS (FastAPI / React)
+                                ↘ Trivy (Security Scans)
+                                ↘ Terraform (IaC Provisioning)
+                                ↘ AWS Secrets Manager (Secrets & Credentials)
+                                ↘ AI Modules (Anomaly Detection / Log Triage)
+
+⚡ Features
+
+✅ Enterprise-grade CI/CD – Build, test, scan, deploy pipelines.
+
+✅ Cloud-native AWS infra – EKS, ECR, RDS, S3 provisioned via Terraform.
+
+✅ Security-first design – GitHub OIDC (no static keys), Trivy scans, Secrets Manager.
+
+✅ Observability stack – Prometheus metrics & Grafana dashboards.
+
+✅ AI-powered insights – Predictive pipeline analysis & log triage modules.
+
+▶️ Quick Start (Local Demo)
+
+Spin everything up locally with Docker Compose:
+
 docker-compose up --build
-```
-- Backend → http://localhost:8000/health
-- Frontend → http://localhost:3000
 
-## 🚀 Deployment to AWS
-1. Copy `terraform.tfvars.example` → `terraform.tfvars` and set values.
-2. Run `terraform init && terraform apply` in `infra/terraform`.
-3. Update kubeconfig with `aws eks update-kubeconfig`.
-4. Deploy manifests in `infra/k8s/`.
 
-## 🎤 Demo Script
-- Show pipelines auto-build in GitHub Actions.
-- Highlight Trivy security scans.
-- Open dashboard and show AI placeholder outputs.
-- Talk about AWS-native design (EKS, ECR, Secrets Manager).
+🌐 Backend → http://localhost:8000/health
+
+💻 Frontend → http://localhost:3000
+
+🚀 Deployment to AWS
+
+Copy example variables:
+
+cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
+
+
+Set your values for:
+
+aws_region
+
+aws_account_id
+
+project_name
+
+Provision infrastructure with Terraform:
+
+cd infra/terraform
+terraform init
+terraform apply -var-file=terraform.tfvars
+
+
+Update kubeconfig to connect with your cluster:
+
+aws eks update-kubeconfig --region <region> --name aiops-platform-eks
+
+
+Deploy workloads:
+
+kubectl apply -f infra/k8s/
+
+📊 Roadmap
+
+🔜 Replace AI placeholders with HuggingFace/OpenAI integrations.
+
+🔜 Expand Grafana dashboards with predictive analytics.
+
+🔜 Add automated cost-optimization recommender for AWS workloads.
+
+🔜 Extend AI modules for intelligent incident triage and remediation.
