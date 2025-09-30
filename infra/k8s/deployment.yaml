@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: <aws_account_id>.dkr.ecr.<aws_region>.amazonaws.com/aiops-platform-backend:latest
+        ports:
+        - containerPort: 8000
