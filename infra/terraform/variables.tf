@@ -1,3 +1,5 @@
-variable "aws_region" { type = string }
-variable "aws_account_id" { type = string }
-variable "project_name" { type = string }
+variable "aws_region" {
+  description = "AWS region for deployment"
+  type        = string
+  default     = "us-east-1"
+}
