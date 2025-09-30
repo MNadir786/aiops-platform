@@ -1,131 +1,85 @@
-🌐 AIOps Platform – DevOps Intelligence as a Service
-🚀 Overview
+# 🌐 AIOps Platform – DevOps Intelligence as a Service  
 
-The AIOps Platform demonstrates how DevOps and AI (AIOps) can converge to create secure, intelligent, and self-optimizing cloud systems.
+---
 
-This project showcases:
+## 🚀 Overview  
+The **AIOps Platform** blends **DevOps** and **AI (AIOps)** to create a secure, intelligent, and self-optimizing cloud system.  
 
-⚙️ Automated CI/CD pipelines with GitHub Actions & Trivy.
+This project demonstrates:  
+- ⚙️ CI/CD pipelines with GitHub Actions & Trivy.  
+- ☁️ AWS-native infrastructure (EKS, ECR, RDS, S3) via Terraform.  
+- 🔒 Security-first practices with OIDC, Trivy, and AWS Secrets Manager.  
+- 🤖 AI-powered anomaly detection & log summarization.  
+- 📊 Observability with Prometheus & Grafana dashboards.  
 
-☁️ AWS-native infrastructure (EKS, ECR, RDS, S3) provisioned via Terraform.
+---
 
-🔒 Security-first design with OIDC authentication, Trivy scans, and AWS Secrets Manager.
+## ✨ Capabilities  
+- ⚙️ **Automated CI/CD pipelines** with GitHub Actions & Trivy.  
+- ☁️ **AWS-native infrastructure** provisioned via Terraform.  
+- 🔒 **Security-first design** (OIDC authentication, Trivy scans, AWS Secrets Manager).  
+- 🤖 **AI modules** for predictive pipeline analysis and log triage.  
+- 📊 **Observability stack** with Prometheus + Grafana dashboards.  
 
-🤖 AI modules for predictive pipeline analysis and log triage.
+---
 
-📊 Observability stack with Prometheus & Grafana dashboards.
+## 🏗️ Architecture (Conceptual Flow)  
 
-🏗️ Architecture (Conceptual Flow)
+1. 👨‍💻 Developer pushes code → GitHub.  
+2. ⚙️ GitHub Actions executes CI/CD (build, test, scan, deploy).  
+3. ☁️ Terraform provisions AWS resources:  
+   - EKS → FastAPI backend + React frontend.  
+   - ECR → Container registry.  
+   - RDS → Database.  
+   - S3 → Object storage.  
+4. 🔑 AWS Secrets Manager secures credentials.  
+5. 🤖 AI modules analyze pipeline results & logs.  
+6. 📊 Prometheus + Grafana provide monitoring & insights.  
 
-👨‍💻 Developer pushes code to GitHub.
+---
 
-⚙️ GitHub Actions runs CI/CD workflows:
+## 📊 Key Deliverables  
+- Automated CI/CD pipelines with GitHub Actions.  
+- Security scanning with Trivy.  
+- AWS infrastructure provisioned via Terraform (EKS, ECR, RDS, S3).  
+- FastAPI backend + React frontend.  
+- AI-assisted log summarization & anomaly detection.  
+- Monitoring and observability stack (Prometheus + Grafana).  
 
-Build & test
+---
 
-Security scans (Trivy)
+## ▶️ Quick Start (Local Demo)  
 
-Terraform plan/apply
-
-☁️ AWS Infrastructure (via Terraform):
-
-EKS – deploys backend (FastAPI) & frontend (React).
-
-ECR – container registry.
-
-RDS – database.
-
-S3 – object storage.
-
-🔑 Secrets Manager – secure credential storage.
-
-🤖 AI Modules – predict pipeline failures & summarize logs.
-
-📊 Monitoring Stack – Prometheus metrics & Grafana dashboards.
-
-⚡ Key Features
-
-✅ Enterprise-grade CI/CD – build, scan, test, deploy.
-
-✅ Cloud-native infrastructure – AWS EKS, RDS, ECR, S3 with Terraform.
-
-✅ Security baked in – OIDC, Trivy, Secrets Manager.
-
-✅ Full observability – Prometheus + Grafana integration.
-
-✅ AI-powered insights – anomaly detection & log triage.
-
-▶️ Quick Start (Local Demo)
-
-Spin up locally with Docker Compose:
-
+```bash
 docker-compose up --build
-
-
 🌐 Backend → http://localhost:8000/health
 
 💻 Frontend → http://localhost:3000
 
 🚀 Deployment to AWS
-
 Copy example variables:
 
+bash
+Copy code
 cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
-
-
-Update:
-
-aws_region
-
-aws_account_id
-
-project_name
+Update values for: aws_region, aws_account_id, project_name.
 
 Provision infrastructure:
 
+bash
+Copy code
 cd infra/terraform
 terraform init
 terraform apply -var-file=terraform.tfvars
-
-
 Update kubeconfig:
 
+bash
+Copy code
 aws eks update-kubeconfig --region <region> --name aiops-platform-eks
-
-
 Deploy workloads:
 
+bash
+Copy code
 kubectl apply -f infra/k8s/
-
-📊 Roadmap
-✅ Phase 1 – Foundation (Delivered)
-
- CI/CD pipelines with GitHub Actions
-
- Security scanning with Trivy
-
- Terraform AWS infra (EKS, ECR, RDS, S3)
-
- Basic FastAPI backend + React frontend
-
-🚧 Phase 2 – Intelligence (In Progress)
-
- AI pipeline analyzer → predict build/test failures
-
- AI log summarizer → accelerate incident triage
-
- Prometheus + Grafana monitoring stack
-
-🔮 Phase 3 – Advanced Capabilities (Planned)
-
- HuggingFace/OpenAI integration for richer AI insights
-
- Cost-optimization recommender for AWS workloads
-
- Automated remediation workflows
-
- Expanded Grafana dashboards with predictive analytics
-
 📜 License
-
-This project is open-source and licensed under the MIT License
+Licensed under the MIT License.
