@@ -1,10 +1,22 @@
-version: '3'
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
   frontend:
     build: ./frontend
+    container_name: aiops-platform-frontend
     ports:
-      - "3000:80"
+      - "3300:80" # Host 3300 -> Container 80 (Nginx)
+    depends_on:
+      - backend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://backend:8000 # Service-to-service URL
+
+  backend:
+    build: ./backend
+    container_name: aiops-platform-backend
+    ports:
+      - "3301:8000" # Host 3301 -> Container 8000 (FastAPI)
+    restart: unless-stopped
+
+networks:
+  default:
+    name: aiops-platform-network
