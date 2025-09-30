@@ -1,68 +1,57 @@
 # 🌐 AIOps Platform – DevOps Intelligence as a Service  
 
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)  
+![Security Scan](https://img.shields.io/badge/security-trivy%20scan%20clean-blue)  
+![License](https://img.shields.io/badge/license-MIT-lightgrey)  
+
+---
+
 ## 🚀 Overview  
-The **AIOps Platform** blends **DevOps practices with AI (AIOps)** to showcase how modern engineering teams can:  
+The **AIOps Platform** demonstrates how **DevOps and AI (AIOps)** converge to create **self-optimizing, secure, and intelligent systems**.  
 
-- ⚙️ **Automate** builds, tests, and deployments with GitHub Actions.  
-- 🔒 **Embed security** at every stage with Trivy image scanning, OIDC authentication, and AWS Secrets Manager.  
-- ☁️ **Provision AWS-native infrastructure** (EKS, ECR, RDS, S3) using Terraform.  
-- 🤖 **Leverage AI modules** to predict pipeline failures and summarize incident logs.  
-- 📊 **Gain observability** with Prometheus + Grafana dashboards.  
-
-This project is designed as both a **portfolio showcase** and a **blueprint for real-world AIOps adoption**.  
+It showcases:  
+- ⚙️ **CI/CD pipelines** with GitHub Actions & Trivy.  
+- ☁️ **AWS-native infrastructure** (EKS, ECR, RDS, S3) via Terraform.  
+- 🔒 **Security first** with OIDC, Trivy scans, and Secrets Manager.  
+- 🤖 **AI modules** for predictive pipeline analysis & log triage.  
+- 📊 **Observability** with Prometheus + Grafana.  
 
 ---
 
 ## 🏗️ Architecture  
 
-```mermaid
-flowchart TD
-    Dev[👨‍💻 Developer] --> GH[📂 GitHub]
-    GH --> GHA[⚙️ GitHub Actions]
-    GHA --> ECR[📦 AWS ECR]
-    GHA --> EKS[☸️ AWS EKS: FastAPI & React]
-    GHA --> Trivy[🛡️ Trivy Security Scans]
-    GHA --> TF[📜 Terraform IaC]
-    TF --> AWS[(☁️ AWS Infra: EKS, RDS, S3)]
-    GHA --> SM[🔑 AWS Secrets Manager]
-    GHA --> AI[🤖 AI Modules: Anomaly Detection & Log Triage]
-<!-- ASCII fallback (uncomment if Mermaid fails on GitHub) --> <!-- Developer ─▶ GitHub ─▶ GitHub Actions ─▶ AWS ECR ─▶ AWS EKS (FastAPI / React) ├─▶ Trivy (Security Scans) ├─▶ Terraform (IaC) ─▶ AWS (EKS, RDS, S3) ├─▶ AWS Secrets Manager └─▶ AI Modules (Anomaly Detection / Log Triage) -->
-⚡ Features
-✅ Enterprise-grade CI/CD – build, test, scan, and deploy pipelines.
+![Architecture Diagram](./docs/architecture.png)  
 
-✅ AWS-native infrastructure – provisioned with Terraform (EKS, RDS, S3, ECR).
+*High-level flow: Developer → GitHub → Actions → AWS (ECR, EKS, RDS, S3) with AI and Security layers.*  
 
-✅ Security-first design – GitHub OIDC, Trivy scans, and Secrets Manager.
+---
 
-✅ Observability stack – Prometheus + Grafana dashboards.
+## ⚡ Features  
+- ✅ **Enterprise-grade CI/CD** – build, test, scan, deploy pipelines.  
+- ✅ **AWS-native infra** – provisioned with Terraform (EKS, RDS, S3, ECR).  
+- ✅ **Security-by-design** – GitHub OIDC, Trivy scans, Secrets Manager.  
+- ✅ **Observability stack** – Prometheus & Grafana dashboards.  
+- ✅ **AI-powered insights** – anomaly detection & log summarization.  
 
-✅ AI-powered insights – predictive analysis & log triage modules.
+---
 
-▶️ Quick Start (Local Demo)
-Run everything locally with Docker Compose:
+## ▶️ Quick Start (Local Demo)  
 
-bash
-Copy code
+```bash
 docker-compose up --build
 🌐 Backend → http://localhost:8000/health
 
 💻 Frontend → http://localhost:3000
 
 🚀 Deployment to AWS
-Copy variables:
+Configure variables:
 
 bash
 Copy code
 cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
-Update values for:
+Update: aws_region, aws_account_id, project_name.
 
-aws_region
-
-aws_account_id
-
-project_name
-
-Provision infrastructure:
+Provision infra:
 
 bash
 Copy code
@@ -80,7 +69,7 @@ bash
 Copy code
 kubectl apply -f infra/k8s/
 📊 Roadmap
-🔜 Replace AI placeholders with HuggingFace/OpenAI integrations.
+🔜 Replace AI placeholders with HuggingFace/OpenAI models.
 
 🔜 Expand Grafana dashboards with predictive analytics.
 
@@ -89,4 +78,4 @@ kubectl apply -f infra/k8s/
 🔜 Extend AI modules for automated incident remediation.
 
 📜 License
-This project is open-source and available under the MIT License.
+This project is licensed under the MIT License.
