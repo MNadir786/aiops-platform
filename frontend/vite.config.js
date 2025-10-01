@@ -6,6 +6,14 @@ module.exports = defineConfig({
     base: "./", // relative asset paths for Nginx
     build: {
         outDir: "dist",
-        emptyOutDir: true
-    }
+        emptyOutDir: true,
+    },
+    server: {
+        proxy: {
+            "/api": {
+                target: "http://localhost:8000", // FastAPI backend
+                changeOrigin: true,
+            },
+        },
+    },
 });

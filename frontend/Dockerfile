@@ -2,9 +2,9 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Install dependencies
+# Copy dependencies and install
 COPY package*.json ./
-RUN npm install --frozen-lockfile || npm install
+RUN npm install
 
 # Copy source and build
 COPY . .
@@ -14,7 +14,10 @@ RUN npm run build
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
-# Copy built files
+# Remove default nginx static assets
+RUN rm -rf ./*
+
+# Copy built files from builder
 COPY --from=build /app/dist .
 
 # Copy custom nginx config

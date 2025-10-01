@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   frontend:
     build: ./frontend
@@ -7,8 +9,8 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-    environment:
-      - VITE_API_URL=http://backend:8000 # Service-to-service URL
+    # 🚫 Removed VITE_API_URL
+    # React should call /api/... relative paths, which Nginx proxies to backend:8000
 
   backend:
     build: ./backend
