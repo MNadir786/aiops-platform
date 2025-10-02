@@ -2,12 +2,21 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Info, XCircle, AlertTriangle } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export default function Logs() {
     const [logs, setLogs] = useState([]);
+    const location = useLocation();
+
+    // Get ?container=db from query params
+    const params = new URLSearchParams(location.search);
+    const container = params.get("container");
 
     const fetchLogs = () => {
-        fetch("/api/logs")
+        let url = "/api/logs";
+        if (container) url += `?container=${container}`;
+
+        fetch(url)
             .then((res) => res.json())
             .then((data) => setLogs(data.logs || []))
             .catch(() => setLogs([]));
@@ -17,7 +26,7 @@ export default function Logs() {
         fetchLogs();
         const interval = setInterval(fetchLogs, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [container]);
 
     const renderLog = (log, i) => {
         let color = "text-blue-400";
@@ -47,7 +56,9 @@ export default function Logs() {
 
     return (
         <div className="p-8 text-white">
-            <h2 className="text-2xl font-bold mb-6">📑 Logs</h2>
+            <h2 className="text-2xl font-bold mb-6">
+                📑 Logs {container && `(filtered: ${container})`}
+            </h2>
             <div className="space-y-2">
                 {logs.length > 0 ? logs.map(renderLog) : <p>No logs available</p>}
             </div>

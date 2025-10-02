@@ -1,7 +1,6 @@
-// src/pages/Dashboard.jsx
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
+import { Activity, Cpu, HardDrive } from "lucide-react";
 import {
     LineChart,
     Line,
@@ -18,6 +17,7 @@ export default function Dashboard() {
     const [timestamp, setTimestamp] = useState("");
     const [metrics, setMetrics] = useState({});
     const [history, setHistory] = useState([]);
+    const [mode, setMode] = useState("local");
     const [showMetricsModal, setShowMetricsModal] = useState(false);
     const [showGrafana, setShowGrafana] = useState(false);
 
@@ -38,14 +38,11 @@ export default function Dashboard() {
         fetch("/api/metrics")
             .then((res) => res.json())
             .then((data) => {
-                console.log("API /api/metrics response:", data);
-
-                // handle both shapes: { metrics: {...} } OR flat { cpu_usage, memory_usage }
                 const m = data.metrics || data;
-
                 setMetrics(m);
+                setMode(data.mode || "local");
 
-                // Keep history of last 20 samples
+                // Keep history (last 20 samples)
                 setHistory((prev) => [
                     ...prev.slice(-19),
                     {
@@ -73,6 +70,22 @@ export default function Dashboard() {
 
     return (
         <main className="p-8 grid grid-cols-1 gap-8">
+            {/* Dashboard Header */}
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-extrabold tracking-wide flex items-center space-x-3">
+                    <Activity className="w-8 h-8 text-indigo-400 animate-pulse" />
+                    <span>AIOps Cockpit</span>
+                </h1>
+                <span
+                    className={`px-4 py-1 rounded-full text-sm font-semibold shadow-lg ${mode === "prometheus"
+                            ? "bg-blue-600 text-white"
+                            : "bg-green-600 text-white"
+                        }`}
+                >
+                    {mode === "prometheus" ? "📡 Prometheus Mode" : "🖥 Local Mode"}
+                </span>
+            </div>
+
             {/* Gauges Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
                 <Gauge value={cpuValue} label="CPU Usage" />
@@ -110,8 +123,11 @@ export default function Dashboard() {
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/20"
+                className={`rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden ${health === "ok" ? "bg-green-900/40" : "bg-red-900/40"
+                    }`}
             >
+                {/* pulse ring */}
+                <div className="absolute inset-0 animate-ping bg-green-500/5 rounded-2xl"></div>
                 <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-green-400">
                     <Activity />
                     <span>System Health</span>
@@ -167,6 +183,38 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </div>
             </motion.div>
+
+            {/* Container Stats Grid */}
+            {metrics.containers && metrics.containers.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/20"
+                >
+                    <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-yellow-400">
+                        <Cpu /> <span>Container Metrics</span>
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {metrics.containers.map((c, i) => (
+                            <div
+                                key={i}
+                                className="bg-black/30 p-4 rounded-lg flex flex-col space-y-2 hover:bg-black/50 transition"
+                            >
+                                <span className="font-semibold">{c.name}</span>
+                                <div className="flex items-center space-x-3">
+                                    <Cpu className="w-5 h-5 text-indigo-400" />
+                                    <span>CPU: {c.cpu_usage}%</span>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <HardDrive className="w-5 h-5 text-green-400" />
+                                    <span>Memory: {c.memory_usage}%</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
 
             {/* Metrics Modal */}
             {showMetricsModal && (
