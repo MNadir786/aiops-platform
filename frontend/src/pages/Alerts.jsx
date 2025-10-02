@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../context/ThemeContext";
+import dayjs from "dayjs";
 
 export default function Alerts() {
-    const { theme } = useTheme();
     const [metrics, setMetrics] = useState({});
     const [alertHistory, setAlertHistory] = useState([]);
 
@@ -26,18 +25,17 @@ export default function Alerts() {
     const memValue = parseInt(metrics.memory_usage) || 0;
 
     const newAlerts = [];
-
     if (cpuValue > criticalThreshold) {
         newAlerts.push({
             message: `🔥 CRITICAL: CPU usage very high (${cpuValue}%)`,
             severity: "critical",
-            timestamp: new Date().toLocaleTimeString(),
+            timestamp: new Date(),
         });
     } else if (cpuValue > warnThreshold) {
         newAlerts.push({
             message: `⚠️ Warning: CPU usage elevated (${cpuValue}%)`,
             severity: "warning",
-            timestamp: new Date().toLocaleTimeString(),
+            timestamp: new Date(),
         });
     }
 
@@ -45,13 +43,13 @@ export default function Alerts() {
         newAlerts.push({
             message: `🔥 CRITICAL: Memory usage very high (${memValue}%)`,
             severity: "critical",
-            timestamp: new Date().toLocaleTimeString(),
+            timestamp: new Date(),
         });
     } else if (memValue > warnThreshold) {
         newAlerts.push({
             message: `⚠️ Warning: Memory usage elevated (${memValue}%)`,
             severity: "warning",
-            timestamp: new Date().toLocaleTimeString(),
+            timestamp: new Date(),
         });
     }
 
@@ -66,15 +64,11 @@ export default function Alerts() {
         warning: "bg-yellow-600/30 border border-yellow-500 text-yellow-200",
     };
 
-    const cardBase =
-        "p-3 rounded-lg shadow-md transition-all duration-300";
-    const themeCards = {
-        dark: `${cardBase} bg-white/10 border-white/20 text-white`,
-        light: `${cardBase} bg-white border-gray-200 text-gray-900`,
-        "24k": `${cardBase} glass-card border-pink-200/40`,
-        flower: `${cardBase} glass-card border-purple-300/40`,
-    };
-    const card = themeCards[theme] || cardBase;
+    const cardBase = "p-3 rounded-lg shadow-md transition-all duration-300";
+    const card = `${cardBase} bg-white/10 border-white/20 text-white`;
+
+    // ✅ Short timestamp
+    const formatTime = (ts) => dayjs(ts).format("HH:mm:ss (MMM D)");
 
     return (
         <div className="p-8 text-white">
@@ -82,12 +76,9 @@ export default function Alerts() {
             {alertHistory.length > 0 ? (
                 <ul className="space-y-3">
                     {alertHistory.map((a, i) => (
-                        <li
-                            key={i}
-                            className={`${card} ${severityStyles[a.severity]}`}
-                        >
+                        <li key={i} className={`${card} ${severityStyles[a.severity]}`}>
                             <span className="block font-semibold">{a.message}</span>
-                            <span className="text-xs opacity-70">⏱ {a.timestamp}</span>
+                            <span className="text-xs opacity-70">⏱ {formatTime(a.timestamp)}</span>
                         </li>
                     ))}
                 </ul>

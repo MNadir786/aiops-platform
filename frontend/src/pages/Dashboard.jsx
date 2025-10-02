@@ -11,10 +11,9 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import Gauge from "../components/Gauge";
-import { useTheme } from "../context/ThemeContext";
+import dayjs from "dayjs";
 
 export default function Dashboard() {
-    const { theme } = useTheme();
     const [health, setHealth] = useState("loading...");
     const [timestamp, setTimestamp] = useState("");
     const [metrics, setMetrics] = useState({});
@@ -59,16 +58,13 @@ export default function Dashboard() {
     const cpuValue = Math.min(parseFloat(metrics.cpu_usage) || 0, 100);
     const memValue = Math.min(parseFloat(metrics.memory_usage) || 0, 100);
 
-    // theme-based card styling
+    // ✅ Short timestamp
+    const formatTimestamp = (ts) =>
+        ts ? dayjs(ts).format("HH:mm:ss (MMM D)") : "n/a";
+
     const cardBase =
         "rounded-2xl shadow-2xl p-6 border transition-all duration-300";
-    const themeCards = {
-        dark: `${cardBase} bg-white/10 border-white/20`,
-        light: `${cardBase} bg-white border-gray-200 text-gray-900`,
-        "24k": `${cardBase} glass-card border-pink-200/40`,
-        flower: `${cardBase} glass-card border-purple-300/40`,
-    };
-    const card = themeCards[theme] || cardBase;
+    const card = `${cardBase} bg-white/10 border-white/20`;
 
     return (
         <main className="p-8 grid grid-cols-1 gap-8">
@@ -136,7 +132,7 @@ export default function Dashboard() {
                 </h2>
                 {health === "ok" ? (
                     <p className="text-green-400 font-semibold text-lg">
-                        ✅ Healthy @ {timestamp}
+                        ✅ Healthy @ {formatTimestamp(timestamp)}
                     </p>
                 ) : (
                     <p className="text-red-400 font-semibold text-lg">
@@ -169,99 +165,12 @@ export default function Dashboard() {
                                     color: "#fff",
                                 }}
                             />
-                            <Line
-                                type="monotone"
-                                dataKey="cpu"
-                                stroke="#6366f1"
-                                strokeWidth={3}
-                                dot={false}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="memory"
-                                stroke="#22c55e"
-                                strokeWidth={3}
-                                dot={false}
-                            />
+                            <Line type="monotone" dataKey="cpu" stroke="#6366f1" strokeWidth={3} dot={false} />
+                            <Line type="monotone" dataKey="memory" stroke="#22c55e" strokeWidth={3} dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
             </motion.div>
-
-            {/* Container Metrics */}
-            {metrics.containers && metrics.containers.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className={card}
-                >
-                    <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-yellow-400">
-                        <Cpu /> <span>Container Metrics</span>
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {metrics.containers.map((c, i) => (
-                            <div
-                                key={i}
-                                className="bg-black/30 p-4 rounded-lg flex flex-col space-y-2 hover:bg-black/50 transition"
-                            >
-                                <span className="font-semibold">{c.name}</span>
-                                <div className="flex items-center space-x-3">
-                                    <Cpu className="w-5 h-5 text-indigo-400" />
-                                    <span>CPU: {c.cpu_usage}%</span>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <HardDrive className="w-5 h-5 text-green-400" />
-                                    <span>Memory: {c.memory_usage}%</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Modal */}
-            {showMetricsModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className={`${card} w-3/4 h-3/4 relative`}>
-                        <button
-                            onClick={() => setShowMetricsModal(false)}
-                            className="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded-lg text-white"
-                        >
-                            ✖ Close
-                        </button>
-                        <h2 className="text-2xl font-bold mb-4 text-indigo-400">
-                            📊 Metrics History
-                        </h2>
-                        <ResponsiveContainer width="100%" height="90%">
-                            <LineChart data={history}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                                <XAxis dataKey="time" stroke="#aaa" />
-                                <YAxis stroke="#aaa" />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "#111",
-                                        border: "1px solid #333",
-                                        color: "#fff",
-                                    }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="cpu"
-                                    stroke="#6366f1"
-                                    strokeWidth={3}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="memory"
-                                    stroke="#22c55e"
-                                    strokeWidth={3}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
         </main>
     );
 }

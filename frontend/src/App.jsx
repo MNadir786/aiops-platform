@@ -1,26 +1,17 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Server } from "lucide-react";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import Sidebar from "./components/Sidebar";
 
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Logs from "./pages/Logs";
-import SettingsPage from "./pages/Settings";
 import Remediation from "./pages/Remediation";
 import Assets from "./pages/Assets"; // ✅ Import Assets page
 
 function AppContent() {
-  const { theme } = useTheme();
-
   return (
-    <div
-      className={`relative min-h-screen flex overflow-hidden ${theme === "dark"
-          ? "bg-gradient-to-br from-black via-purple-900 to-blue-900 text-white"
-          : "bg-gray-100 text-black"
-        }`}
-    >
+    <div className="relative min-h-screen flex overflow-hidden bg-gradient-to-br from-black via-purple-900 to-blue-900 text-white">
       {/* Sidebar */}
       <Sidebar />
 
@@ -38,8 +29,8 @@ function AppContent() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/remediation" element={<Remediation />} />
-          <Route path="/assets" element={<Assets />} /> {/* ✅ Add Assets route */}
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/assets" element={<Assets />} /> {/* ✅ Assets route */}
+          {/* ❌ Removed Settings route */}
         </Routes>
       </div>
     </div>
@@ -48,10 +39,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }

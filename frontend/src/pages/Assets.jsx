@@ -1,14 +1,15 @@
 // frontend/src/pages/Assets.jsx
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Server, CreditCard, Monitor, Zap, Database, Trash, ChevronDown, ChevronUp } from "lucide-react";
+import { Server, CreditCard, Monitor, Zap, Database, ChevronDown, ChevronUp } from "lucide-react";
 import DevicePanel from "../components/DevicePanel";
 
 export default function Assets() {
     const [categories, setCategories] = useState([]);
     const [newCategory, setNewCategory] = useState("");
     const [newDevice, setNewDevice] = useState({ category: "", name: "", status: "" });
-    const [expandedDevice, setExpandedDevice] = useState(null); // track which device is open
+    const [expandedDevice, setExpandedDevice] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const fetchAssets = () => {
         fetch("/api/assets")
@@ -23,7 +24,6 @@ export default function Assets() {
         return () => clearInterval(interval);
     }, []);
 
-    // Add new category
     const handleAddCategory = () => {
         if (!newCategory) return;
         fetch(`/api/assets/category/${newCategory}`, { method: "POST" })
@@ -33,14 +33,13 @@ export default function Assets() {
             });
     };
 
-    // Add new device
     const handleAddDevice = () => {
         if (!newDevice.category || !newDevice.name || !newDevice.status) return;
         fetch(`/api/assets/item/${newDevice.category}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                id: Date.now(),  // quick unique ID
+                id: Date.now(),
                 name: newDevice.name,
                 status: newDevice.status
             }),
@@ -50,19 +49,21 @@ export default function Assets() {
         });
     };
 
-    // Delete device
-    const handleDeleteDevice = (category, id) => {
+    const confirmDeleteDevice = () => {
+        if (!deleteTarget) return;
+        const { category, id } = deleteTarget;
         fetch(`/api/assets/item/${category}/${id}`, { method: "DELETE" })
-            .then(() => fetchAssets());
+            .then(() => {
+                setDeleteTarget(null);
+                fetchAssets();
+            });
     };
 
-    // Toggle expand/collapse for a device
     const toggleExpand = (catName, deviceId) => {
         const key = `${catName}-${deviceId}`;
         setExpandedDevice(expandedDevice === key ? null : key);
     };
 
-    // Pick icon based on category
     const getCategoryIcon = (catName) => {
         if (catName.toLowerCase().includes("server")) return <Server className="text-indigo-400" />;
         if (catName.toLowerCase().includes("atm")) return <CreditCard className="text-green-400" />;
@@ -82,7 +83,7 @@ export default function Assets() {
                 <div className="flex space-x-2">
                     <input
                         type="text"
-                        placeholder="Category name (e.g., generators)"
+                        placeholder="Category name (e.g., Generators)"
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         className="flex-1 p-2 rounded bg-black/40 border border-gray-600"
@@ -108,7 +109,7 @@ export default function Assets() {
                         <option value="">Select category</option>
                         {categories.map((cat, i) => (
                             <option key={i} value={cat.name}>
-                                {cat.name}
+                                {cat.name.toUpperCase()}
                             </option>
                         ))}
                     </select>
@@ -140,7 +141,7 @@ export default function Assets() {
                 <p>No assets available.</p>
             ) : (
                 categories
-                    .filter(cat => cat.items && cat.items.length > 0) // ✅ Hide empty categories
+                    .filter(cat => cat.items && cat.items.length > 0)
                     .map((cat, i) => (
                         <motion.div
                             key={i}
@@ -149,9 +150,9 @@ export default function Assets() {
                             transition={{ delay: i * 0.1 }}
                             className="mb-6 p-4 bg-white/10 rounded-lg shadow-lg"
                         >
-                            <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-3">
+                            <h3 className="text-xl font-semibold mb-4 flex items-center space-x-3">
                                 {getCategoryIcon(cat.name)}
-                                <span>{cat.name}</span>
+                                <span>{cat.name.toUpperCase()}</span>
                             </h3>
                             <div className="grid md:grid-cols-2 gap-4">
                                 {cat.items.map((item, j) => {
@@ -165,34 +166,35 @@ export default function Assets() {
                                         >
                                             <div className="flex justify-between items-center">
                                                 <span className="font-bold">{item.name}</span>
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => toggleExpand(cat.name, item.id)}
-                                                        className="px-2 py-1 bg-indigo-600 rounded text-xs hover:bg-indigo-700 flex items-center"
-                                                    >
-                                                        {isExpanded ? (
-                                                            <>
-                                                                <ChevronUp className="w-4 h-4 mr-1" /> Hide
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <ChevronDown className="w-4 h-4 mr-1" /> Expand
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteDevice(cat.name, item.id)}
-                                                        className="px-2 py-1 bg-red-600 rounded text-xs hover:bg-red-700 flex items-center"
-                                                    >
-                                                        <Trash className="w-4 h-4 mr-1" /> Delete
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => toggleExpand(cat.name, item.id)}
+                                                    className="px-2 py-1 bg-indigo-600 rounded text-xs hover:bg-indigo-700 flex items-center"
+                                                >
+                                                    {isExpanded ? (
+                                                        <>
+                                                            <ChevronUp className="w-4 h-4 mr-1" /> Hide
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ChevronDown className="w-4 h-4 mr-1" /> Expand
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                             <p className="text-sm opacity-80">Status: {item.status}</p>
 
-                                            {/* Expanded device panel */}
                                             {isExpanded && (
-                                                <DevicePanel category={cat.name} device={item} />
+                                                <>
+                                                    <DevicePanel category={cat.name} device={item} />
+                                                    <div className="mt-3 text-right">
+                                                        <button
+                                                            onClick={() => setDeleteTarget({ category: cat.name, id: item.id })}
+                                                            className="px-3 py-1 border border-red-600 text-red-600 rounded text-xs hover:bg-red-600 hover:text-white"
+                                                        >
+                                                            Delete Device
+                                                        </button>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                     );
@@ -200,6 +202,32 @@ export default function Assets() {
                             </div>
                         </motion.div>
                     ))
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                    <div className="bg-gray-900 p-6 rounded-lg shadow-xl w-96 border border-gray-700">
+                        <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ Confirm Deletion</h3>
+                        <p className="text-sm mb-4">
+                            Are you sure you want to delete this device? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteDevice}
+                                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700"
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
