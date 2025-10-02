@@ -1,0 +1,60 @@
+{
+    "server": {
+        "display_name": "Server",
+        "metrics": {
+            "cpu": {
+                "type": "percentage"
+            },
+            "memory": {
+                "type": "percentage"
+            },
+            "disk_usage": {
+                "type": "percentage"
+            }
+        }
+    },
+    "atm": {
+        "display_name": "ATM",
+        "metrics": {
+            "cash_level": {
+                "type": "percentage"
+            },
+            "transaction_success_rate": {
+                "type": "percentage"
+            },
+            "latency_ms": {
+                "type": "number",
+                "unit": "ms"
+            }
+        }
+    },
+    "pos": {
+        "display_name": "POS Terminal",
+        "metrics": {
+            "transactions_per_min": {
+                "type": "number"
+            },
+            "error_rate": {
+                "type": "percentage"
+            }
+        }
+    },
+    "medical_device": {
+        "display_name": "Medical Device",
+        "metrics": {
+            "battery": {
+                "type": "percentage"
+            },
+            "calibration_status": {
+                "type": "enum",
+                "values": [
+                    "ok",
+                    "needs_calibration"
+                ]
+            },
+            "error_code": {
+                "type": "string"
+            }
+        }
+    }
+}
