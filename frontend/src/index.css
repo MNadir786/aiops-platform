@@ -2,6 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================
+   Base body style
+   ========================== */
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply transition-colors duration-500 ease-in-out;
+  /* default text color fallback */
+  color: var(--page-text, #ffffff);
+}
+
+/* --------------------------
+   Dark theme (default)
+   -------------------------- */
+.theme-dark {
+  /* dark VSCode-like gradient */
+  background: linear-gradient(180deg, #0b0710 0%, #241235 50%, #2b1950 100%);
+  --page-text: #e8eefc;
+  /* light text */
+  color: var(--page-text);
+}
+
+/* make sure elements that use text-white keep readable */
+.theme-dark .text-white {
+  color: #e8eefc !important;
+}
+
+/* glass cards in dark theme */
+.theme-dark .glass-card,
+.theme-dark .glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* --------------------------
+   Neon theme (purple / pink glass)
+   -------------------------- */
+.theme-neon {
+  background: linear-gradient(135deg, #2b0b3a 0%, #5b1f9e 40%, #a01aa8 70%);
+  background-size: 200% 200%;
+  animation: neonShift 12s ease infinite;
+  --page-text: #0b0b10;
+  /* dark text for neon mode so everything is readable */
+  color: var(--page-text);
+}
+
+/* force any .text-white usage to become readable dark color in neon */
+.theme-neon .text-white {
+  color: rgba(11, 11, 16, 1) !important;
+}
+
+/* glass look for neon */
+.theme-neon .glass-card,
+.theme-neon .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  /* light glass so text is readable */
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(160, 26, 168, 0.12);
+}
+
+/* subtle accent on neon header / aside */
+.theme-neon header,
+.theme-neon aside {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* helper class used by components for a light glass card */
+.glass-card {
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+/* --------------------------
+   Small helpers / accessibility tweaks
+   -------------------------- */
+/* When neon is active, inputs should be dark text on light glass */
+.theme-neon input,
+.theme-neon select,
+.theme-neon textarea {
+  color: #0b0b10;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* When dark is active, inputs should be light on dark */
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea {
+  color: #e8eefc;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Gradient animation for neon background */
+@keyframes neonShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }

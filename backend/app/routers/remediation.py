@@ -3,26 +3,47 @@ import datetime
 
 router = APIRouter()
 
-# Simple remediation actions (in prod these would trigger scripts/playbooks)
-remediation_actions = []
+# Available actions
+available_actions = {
+    "restart-backend": {"desc": "Restart Backend Service"},
+    "rerun-pipeline": {"desc": "Rerun CI/CD Pipeline"},
+    "scale-up": {"desc": "Scale Up Pods"},
+}
 
-@router.get("/remediation")
-def list_remediations():
+# In-memory history
+remediation_history = []
+
+
+@router.get("/remediation/actions")
+def list_actions():
     """
-    Return a history of remediation actions taken.
+    List available remediation actions.
     """
-    return {"remediations": remediation_actions}
+    return {"actions": available_actions}
+
+
+@router.get("/remediation/history")
+def list_history():
+    """
+    List past remediation runs.
+    """
+    return {"history": remediation_history}
+
 
 @router.post("/remediation/run/{action}")
-def run_remediation(action: str):
+def run_action(action: str):
     """
     Execute a remediation action (simulated).
-    e.g., restart_pod, clear_cache, scale_service
     """
+    if action not in available_actions:
+        return {"status": "error", "message": f"Unknown action: {action}"}
+
     entry = {
         "timestamp": datetime.datetime.now().isoformat(),
         "action": action,
-        "result": f"Action '{action}' executed successfully (simulated)."
+        "desc": available_actions[action]["desc"],
+        "result": f"Action '{action}' executed successfully (simulated).",
     }
-    remediation_actions.append(entry)
+    remediation_history.append(entry)
+
     return {"status": "ok", "remediation": entry}

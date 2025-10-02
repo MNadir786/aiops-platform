@@ -1,9 +1,27 @@
-name: Build and Push
-on: [push]
+name: Build & Push Images
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Build Docker image
-      run: echo "docker build step"
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build backend image
+        run: |
+          docker build -t ${{ secrets.ECR_REGISTRY }}/aiops-backend:latest ./backend
+          docker push ${{ secrets.ECR_REGISTRY }}/aiops-backend:latest
+
+      - name: Build frontend image
+        run: |
+          docker build -t ${{ secrets.ECR_REGISTRY }}/aiops-frontend:latest ./frontend
+          docker push ${{ secrets.ECR_REGISTRY }}/aiops-frontend:latest

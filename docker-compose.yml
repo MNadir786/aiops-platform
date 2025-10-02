@@ -5,19 +5,49 @@ services:
     build: ./frontend
     container_name: aiops-platform-frontend
     ports:
-      - "3300:80" # Host 3300 -> Container 80 (Nginx)
+      - "3300:80" # Frontend UI at http://localhost:3300
     depends_on:
       - backend
     restart: unless-stopped
-    # 🚫 Removed VITE_API_URL
-    # React should call /api/... relative paths, which Nginx proxies to backend:8000
 
   backend:
     build: ./backend
     container_name: aiops-platform-backend
     ports:
-      - "3301:8000" # Host 3301 -> Container 8000 (FastAPI)
+      - "3301:8000" # FastAPI backend at http://localhost:3301
     restart: unless-stopped
+    environment:
+      - METRICS_MODE=local
+      - PROMETHEUS_URL=http://prometheus:9090
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aiops-platform-prometheus
+    ports:
+      - "9090:9090" # Prometheus UI at http://localhost:9090
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aiops-platform-grafana
+    ports:
+      - "3001:3000" # Grafana UI at http://localhost:3001
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+
+volumes:
+  grafana_data:
+
 
 networks:
   default:

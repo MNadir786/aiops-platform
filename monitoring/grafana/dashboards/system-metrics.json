@@ -1,0 +1,195 @@
+{
+    "id": null,
+    "title": "AIOps System Metrics",
+    "tags": [
+        "aiops",
+        "system"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 2,
+    "refresh": "5s",
+    "panels": [
+        {
+            "type": "gauge",
+            "title": "CPU Usage (%)",
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "min": 0,
+                    "max": 100,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 60
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                }
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "horizontal",
+                "showThresholdLabels": true,
+                "showThresholdMarkers": true
+            },
+            "targets": [
+                {
+                    "expr": "aiops_cpu_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "CPU Usage"
+                }
+            ],
+            "gridPos": {
+                "x": 0,
+                "y": 0,
+                "w": 12,
+                "h": 8
+            }
+        },
+        {
+            "type": "gauge",
+            "title": "Memory Usage (%)",
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "min": 0,
+                    "max": 100,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 70
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    }
+                }
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "horizontal",
+                "showThresholdLabels": true,
+                "showThresholdMarkers": true
+            },
+            "targets": [
+                {
+                    "expr": "aiops_memory_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "Memory Usage"
+                }
+            ],
+            "gridPos": {
+                "x": 12,
+                "y": 0,
+                "w": 12,
+                "h": 8
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "CPU Usage Trend",
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "aiops_cpu_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "CPU Usage"
+                }
+            ],
+            "gridPos": {
+                "x": 0,
+                "y": 8,
+                "w": 24,
+                "h": 8
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Memory Usage Trend",
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "aiops_memory_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "Memory Usage"
+                }
+            ],
+            "gridPos": {
+                "x": 0,
+                "y": 16,
+                "w": 24,
+                "h": 8
+            }
+        },
+        {
+            "type": "table",
+            "title": "Per-Container CPU & Memory",
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                }
+            },
+            "options": {
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "displayName": "CPU Usage",
+                        "desc": true
+                    }
+                ]
+            },
+            "targets": [
+                {
+                    "expr": "aiops_cpu_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "{{instance}}"
+                },
+                {
+                    "expr": "aiops_memory_usage_percent{job=\"aiops-backend\"}",
+                    "legendFormat": "{{instance}}"
+                }
+            ],
+            "gridPos": {
+                "x": 0,
+                "y": 24,
+                "w": 24,
+                "h": 8
+            }
+        }
+    ]
+}

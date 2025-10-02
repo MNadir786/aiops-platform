@@ -11,8 +11,10 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import Gauge from "../components/Gauge";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Dashboard() {
+    const { theme } = useTheme();
     const [health, setHealth] = useState("loading...");
     const [timestamp, setTimestamp] = useState("");
     const [metrics, setMetrics] = useState({});
@@ -22,27 +24,20 @@ export default function Dashboard() {
     const [showGrafana, setShowGrafana] = useState(false);
 
     const fetchData = () => {
-        // --- health ---
         fetch("/api/health")
             .then((res) => res.json())
             .then((data) => {
                 setHealth(data.status);
                 setTimestamp(data.timestamp);
             })
-            .catch((err) => {
-                console.error("Failed to fetch /api/health:", err);
-                setHealth("error");
-            });
+            .catch(() => setHealth("error"));
 
-        // --- metrics ---
-        fetch("/api/metrics")
+        fetch("/api/metrics/json")
             .then((res) => res.json())
             .then((data) => {
                 const m = data.metrics || data;
                 setMetrics(m);
                 setMode(data.mode || "local");
-
-                // Keep history (last 20 samples)
                 setHistory((prev) => [
                     ...prev.slice(-19),
                     {
@@ -52,10 +47,7 @@ export default function Dashboard() {
                     },
                 ]);
             })
-            .catch((err) => {
-                console.error("Failed to fetch /api/metrics:", err);
-                setMetrics({});
-            });
+            .catch(() => setMetrics({}));
     };
 
     useEffect(() => {
@@ -64,13 +56,23 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, []);
 
-    // CPU & Memory values
     const cpuValue = Math.min(parseFloat(metrics.cpu_usage) || 0, 100);
     const memValue = Math.min(parseFloat(metrics.memory_usage) || 0, 100);
 
+    // theme-based card styling
+    const cardBase =
+        "rounded-2xl shadow-2xl p-6 border transition-all duration-300";
+    const themeCards = {
+        dark: `${cardBase} bg-white/10 border-white/20`,
+        light: `${cardBase} bg-white border-gray-200 text-gray-900`,
+        "24k": `${cardBase} glass-card border-pink-200/40`,
+        flower: `${cardBase} glass-card border-purple-300/40`,
+    };
+    const card = themeCards[theme] || cardBase;
+
     return (
         <main className="p-8 grid grid-cols-1 gap-8">
-            {/* Dashboard Header */}
+            {/* Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-extrabold tracking-wide flex items-center space-x-3">
                     <Activity className="w-8 h-8 text-indigo-400 animate-pulse" />
@@ -82,17 +84,19 @@ export default function Dashboard() {
                             : "bg-green-600 text-white"
                         }`}
                 >
-                    {mode === "prometheus" ? "📡 Prometheus Mode" : "🖥 Local Mode"}
+                    {mode === "prometheus"
+                        ? "📡 Prometheus Mode"
+                        : "🖥 Local Mode"}
                 </span>
             </div>
 
-            {/* Gauges Row */}
+            {/* Gauges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
                 <Gauge value={cpuValue} label="CPU Usage" />
                 <Gauge value={memValue} label="Memory Usage" />
             </div>
 
-            {/* Toggle Grafana */}
+            {/* Grafana Toggle */}
             <div className="flex justify-center">
                 <button
                     onClick={() => setShowGrafana(!showGrafana)}
@@ -107,7 +111,7 @@ export default function Dashboard() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 bg-black/40 backdrop-blur-xl rounded-2xl shadow-lg p-4 border border-white/10"
+                    className={`${card} mt-6`}
                 >
                     <iframe
                         src="http://localhost:3000/d/your_dashboard_id/your_panel?orgId=1&refresh=5s"
@@ -123,10 +127,8 @@ export default function Dashboard() {
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden ${health === "ok" ? "bg-green-900/40" : "bg-red-900/40"
-                    }`}
+                className={`${card} relative overflow-hidden`}
             >
-                {/* pulse ring */}
                 <div className="absolute inset-0 animate-ping bg-green-500/5 rounded-2xl"></div>
                 <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-green-400">
                     <Activity />
@@ -137,16 +139,18 @@ export default function Dashboard() {
                         ✅ Healthy @ {timestamp}
                     </p>
                 ) : (
-                    <p className="text-red-400 font-semibold text-lg">❌ {health}</p>
+                    <p className="text-red-400 font-semibold text-lg">
+                        ❌ {health}
+                    </p>
                 )}
             </motion.div>
 
-            {/* Metrics History Card */}
+            {/* Metrics History */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/20 cursor-pointer hover:bg-white/20"
+                className={`${card} cursor-pointer`}
                 onClick={() => setShowMetricsModal(true)}
             >
                 <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-indigo-400">
@@ -184,13 +188,13 @@ export default function Dashboard() {
                 </div>
             </motion.div>
 
-            {/* Container Stats Grid */}
+            {/* Container Metrics */}
             {metrics.containers && metrics.containers.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/20"
+                    className={card}
                 >
                     <h2 className="flex items-center space-x-2 text-xl font-semibold mb-4 text-yellow-400">
                         <Cpu /> <span>Container Metrics</span>
@@ -216,10 +220,10 @@ export default function Dashboard() {
                 </motion.div>
             )}
 
-            {/* Metrics Modal */}
+            {/* Modal */}
             {showMetricsModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className="bg-gray-900 rounded-2xl shadow-2xl p-6 w-3/4 h-3/4 relative">
+                    <div className={`${card} w-3/4 h-3/4 relative`}>
                         <button
                             onClick={() => setShowMetricsModal(false)}
                             className="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded-lg text-white"
