@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Server, BarChart3, FileText, Settings, Bell, Wrench, Package } from "lucide-react";
+import { Server, BarChart3, FileText, Bell, Wrench, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Sidebar() {
@@ -27,8 +27,7 @@ export default function Sidebar() {
                     { icon: Bell, label: "Alerts", path: "/alerts" },
                     { icon: FileText, label: "Logs", path: "/logs" },
                     { icon: Wrench, label: "Remediation", path: "/remediation" },
-                    { icon: Package, label: "Assets", path: "/assets" }, // ✅ NEW
-                    { icon: Settings, label: "Settings", path: "/settings" },
+                    { icon: Package, label: "Assets", path: "/assets" }, // ✅ Assets kept
                 ].map(({ icon: Icon, label, path }, i) => (
                     <Link key={i} to={path}>
                         <motion.div
