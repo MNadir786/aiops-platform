@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Logs from "./pages/Logs";
 import SettingsPage from "./pages/Settings";
+import Remediation from "./pages/Remediation"; // ✅ New import
 
 function AppContent() {
   const { theme } = useTheme();
@@ -35,6 +36,7 @@ function AppContent() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/logs" element={<Logs />} />
+          <Route path="/remediation" element={<Remediation />} /> {/* ✅ New route */}
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </div>
