@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import Response
-from app.routers import health, metrics, logs, remediation, anomalies
+from app.routers import health, metrics, logs, remediation, anomalies, assets  # <-- added assets
 from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
 import psutil
 
@@ -12,6 +12,7 @@ app.include_router(metrics.router, prefix="/api")
 app.include_router(logs.router, prefix="/api")
 app.include_router(remediation.router, prefix="/api")
 app.include_router(anomalies.router, prefix="/api")
+app.include_router(assets.router, prefix="/api")   # <-- NEW include
 
 # --- Prometheus Gauges ---
 cpu_usage_gauge = Gauge("system_cpu_usage_percent", "System CPU usage percentage")
