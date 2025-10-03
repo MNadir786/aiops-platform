@@ -1,60 +1,92 @@
 {
-    "server": {
-        "display_name": "Server",
-        "metrics": {
-            "cpu": {
-                "type": "percentage"
+    "compute": {
+        "name": "Compute",
+        "items": [
+            {
+                "id": 1,
+                "name": "Kubernetes Cluster",
+                "status": "running"
             },
-            "memory": {
-                "type": "percentage"
-            },
-            "disk_usage": {
-                "type": "percentage"
+            {
+                "id": 2,
+                "name": "VM Pool (EC2)",
+                "status": "running"
             }
-        }
+        ]
     },
-    "atm": {
-        "display_name": "ATM",
-        "metrics": {
-            "cash_level": {
-                "type": "percentage"
+    "databases": {
+        "name": "Databases",
+        "items": [
+            {
+                "id": 3,
+                "name": "Postgres Primary",
+                "status": "running"
             },
-            "transaction_success_rate": {
-                "type": "percentage"
-            },
-            "latency_ms": {
-                "type": "number",
-                "unit": "ms"
+            {
+                "id": 4,
+                "name": "Redis Cache",
+                "status": "running"
             }
-        }
+        ]
     },
-    "pos": {
-        "display_name": "POS Terminal",
-        "metrics": {
-            "transactions_per_min": {
-                "type": "number"
+    "networking": {
+        "name": "Networking",
+        "items": [
+            {
+                "id": 5,
+                "name": "API Gateway",
+                "status": "running"
             },
-            "error_rate": {
-                "type": "percentage"
+            {
+                "id": 6,
+                "name": "Load Balancer",
+                "status": "running"
             }
-        }
+        ]
     },
-    "medical_device": {
-        "display_name": "Medical Device",
-        "metrics": {
-            "battery": {
-                "type": "percentage"
+    "applications": {
+        "name": "Applications",
+        "items": [
+            {
+                "id": 7,
+                "name": "Checkout Service",
+                "status": "running"
             },
-            "calibration_status": {
-                "type": "enum",
-                "values": [
-                    "ok",
-                    "needs_calibration"
-                ]
-            },
-            "error_code": {
-                "type": "string"
+            {
+                "id": 8,
+                "name": "Auth Service",
+                "status": "running"
             }
-        }
+        ]
+    },
+    "iot": {
+        "name": "IoT Devices",
+        "items": [
+            {
+                "id": 9,
+                "name": "Kabul Medical MRI Cluster",
+                "status": "running"
+            },
+            {
+                "id": 10,
+                "name": "Smart Pump #1",
+                "status": "running"
+            }
+        ]
+    },
+    "business": {
+        "name": "Business Metrics",
+        "items": [
+            {
+                "id": 11,
+                "name": "Realtime Transactions",
+                "status": "running"
+            },
+            {
+                "id": 12,
+                "name": "Cloud Cost Tracker",
+                "status": "running"
+            }
+        ]
     }
 }
