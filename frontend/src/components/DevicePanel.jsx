@@ -2,46 +2,34 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import {
-    RefreshCw,
-    Activity,
-    Cpu,
-    HardDrive,
-    CreditCard,
-    DollarSign,
-    ShoppingCart,
-    Monitor,
-    BatteryCharging,
-    Zap,
-    Thermometer,
-    Terminal,
+    Cpu, HardDrive, Database, Globe, Activity, Package,
+    Zap, Thermometer, Server, Trash2, RefreshCw
 } from "lucide-react";
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from "recharts";
 
-dayjs.extend(relativeTime);
-
-export default function DevicePanel({ category, device }) {
-    const [metrics, setMetrics] = useState(null);
+export default function DevicePanel({ category, device, onDelete }) {
+    const [metrics, setMetrics] = useState({});
     const [logs, setLogs] = useState([]);
     const [lastUpdate, setLastUpdate] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const logEndRef = useRef(null);
 
     const fetchData = async () => {
         try {
             setLoading(true);
-
             const metricsRes = await fetch(`/api/assets/${category}/${device.id}/metrics`);
             const metricsData = await metricsRes.json();
-
             const logsRes = await fetch(`/api/assets/${category}/${device.id}/logs`);
             const logsData = await logsRes.json();
-
             setMetrics(metricsData.metrics || {});
             setLogs(logsData.logs || []);
             setLastUpdate(new Date().toISOString());
         } catch (err) {
-            console.error("Error fetching device panel data:", err);
+            console.error("Error fetching device data:", err);
         } finally {
             setLoading(false);
         }
@@ -62,156 +50,92 @@ export default function DevicePanel({ category, device }) {
     const formatTimestamp = (ts) =>
         ts ? `${dayjs(ts).fromNow()} (${dayjs(ts).format("HH:mm:ss MMM D")})` : "n/a";
 
-    const formatLogTime = (ts) =>
-        ts ? dayjs(ts).format("HH:mm:ss") : "";
-
-    const colorForMetric = (key, value) => {
-        if (key.toLowerCase().includes("fuel")) {
-            return value > 50
-                ? "bg-green-600/20 text-green-400"
-                : value > 20
-                    ? "bg-yellow-600/20 text-yellow-400"
-                    : "bg-red-600/20 text-red-400";
-        }
-        if (key.toLowerCase().includes("temp")) {
-            return value > 70
-                ? "bg-red-600/20 text-red-400"
-                : "bg-orange-600/20 text-orange-400";
-        }
-        return "bg-gray-700/40 text-gray-200";
+    const getRelevantMetrics = () => {
+        const lower = category.toLowerCase();
+        if (lower.includes("compute") || lower.includes("server"))
+            return { CPU: metrics.cpu_usage, Memory: metrics.memory_usage, Uptime: metrics.uptime };
+        if (lower.includes("database"))
+            return { Latency: metrics.query_latency, Connections: metrics.connections, "Disk I/O": metrics.disk_io };
+        if (lower.includes("network"))
+            return { Bandwidth: metrics.bandwidth, Latency: metrics.latency, "Packet Loss": metrics.packet_loss };
+        if (lower.includes("application"))
+            return { "Requests/s": metrics.rps, "Errors/s": metrics.errors, "P95 Latency": metrics.p95_latency };
+        if (lower.includes("iot"))
+            return { Temperature: metrics.temperature, Fuel: metrics.fuel_level, Battery: metrics.battery };
+        if (lower.includes("business"))
+            return { Transactions: metrics.transactions, Sales: metrics.sales, Conversions: metrics.conversions };
+        return metrics; // fallback
     };
 
-    const renderBigIcon = () => {
-        if (category.toLowerCase().includes("server"))
-            return (
-                <div className="p-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-700 shadow-xl">
-                    <Cpu className="w-12 h-12 text-white" strokeWidth={2.5} />
-                </div>
-            );
-        if (category.toLowerCase().includes("atm"))
-            return (
-                <div className="p-6 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 shadow-xl">
-                    <CreditCard className="w-12 h-12 text-white" strokeWidth={2.5} />
-                </div>
-            );
-        if (category.toLowerCase().includes("pos"))
-            return (
-                <div className="p-6 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 shadow-xl">
-                    <ShoppingCart className="w-12 h-12 text-white" strokeWidth={2.5} />
-                </div>
-            );
-        if (category.toLowerCase().includes("generator"))
-            return (
-                <div className="p-6 rounded-full bg-gradient-to-br from-red-500 to-orange-600 shadow-xl">
-                    <BatteryCharging className="w-12 h-12 text-white" strokeWidth={2.5} />
-                </div>
-            );
-        return (
-            <div className="p-6 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 shadow-xl">
-                <Monitor className="w-12 h-12 text-white" strokeWidth={2.5} />
-            </div>
-        );
-    };
-
-    const getLogColor = (msg) => {
-        if (/error|failed|declined|offline/i.test(msg))
-            return "text-red-400 font-semibold";
-        if (/warn|low|timeout/i.test(msg)) return "text-yellow-400";
-        if (/approved|started|online|ok/i.test(msg)) return "text-green-400";
-        return "text-gray-300";
-    };
+    const renderMetricChart = (key, value) => (
+        <div className="p-3 bg-black/40 rounded-lg border border-gray-700 shadow">
+            <h4 className="text-sm font-semibold mb-2">{key}</h4>
+            <ResponsiveContainer width="100%" height={150}>
+                <LineChart data={value || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="time" stroke="#aaa" hide />
+                    <YAxis stroke="#aaa" />
+                    <Tooltip contentStyle={{ backgroundColor: "#111", border: "1px solid #333", color: "#fff" }} />
+                    <Line type="monotone" dataKey="value" stroke="#4ade80" strokeWidth={2} dot={false} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-3 p-4 bg-black/30 rounded-lg border border-gray-700"
+            className="mt-3 p-6 bg-black/30 rounded-lg border border-gray-700"
         >
             {loading ? (
                 <div className="text-gray-400 text-sm">Loading device data...</div>
             ) : (
                 <>
-                    {/* Header with Icon */}
-                    <div className="flex items-center space-x-4 mb-4">
-                        {renderBigIcon()}
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h4 className="text-lg font-bold">{device.name}</h4>
                             <p className="text-sm opacity-80">Status: {device.status}</p>
-                            <p className="text-xs text-gray-400">
-                                Last update: {formatTimestamp(lastUpdate)}
-                            </p>
+                            <p className="text-xs text-gray-400">Last update: {formatTimestamp(lastUpdate)}</p>
                         </div>
+                        <button
+                            onClick={() => confirmDelete ? onDelete?.(category, device.id) : setConfirmDelete(true)}
+                            className="px-3 py-1 border border-red-500 text-red-500 rounded text-xs hover:bg-red-600 hover:text-white flex items-center space-x-1"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            <span>{confirmDelete ? "Confirm?" : "Delete"}</span>
+                        </button>
                     </div>
 
-                    {/* Metrics Section */}
-                    <div className="mb-4">
-                        <h4 className="flex items-center text-md font-semibold text-indigo-400 mb-2">
-                            <Activity className="w-5 h-5 mr-2" /> Metrics
-                        </h4>
-                        {metrics ? (
-                            <ul className="grid grid-cols-2 gap-2 text-sm">
-                                {Object.entries(metrics).map(([key, value], idx) => (
-                                    <li
-                                        key={idx}
-                                        className={`flex items-center space-x-2 p-2 rounded shadow-sm ${colorForMetric(
-                                            key,
-                                            parseFloat(value) || value
-                                        )}`}
-                                    >
-                                        {key.toLowerCase().includes("cpu") && (
-                                            <Cpu className="w-4 h-4" />
-                                        )}
-                                        {key.toLowerCase().includes("memory") && (
-                                            <HardDrive className="w-4 h-4" />
-                                        )}
-                                        {key.toLowerCase().includes("cash") && (
-                                            <DollarSign className="w-4 h-4" />
-                                        )}
-                                        {key.toLowerCase().includes("fuel") && (
-                                            <Zap className="w-4 h-4" />
-                                        )}
-                                        {key.toLowerCase().includes("temp") && (
-                                            <Thermometer className="w-4 h-4" />
-                                        )}
-                                        <span className="capitalize font-bold">{key}:</span>
-                                        {key.toLowerCase().includes("timestamp")
-                                            ? dayjs(value).format("HH:mm:ss (MMM D)")
-                                            : value}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-400">No metrics available</p>
-                        )}
+                    {/* Metrics */}
+                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                        {Object.entries(getRelevantMetrics()).map(([k, v]) => renderMetricChart(k, v))}
                     </div>
 
-                    {/* Logs Section */}
+                    {/* Logs */}
                     <div>
                         <h4 className="flex items-center text-md font-semibold text-green-400 mb-2">
-                            <Terminal className="w-5 h-5 mr-2" /> Logs
+                            <Activity className="w-5 h-5 mr-2" /> Logs
                         </h4>
                         <div className="max-h-40 overflow-y-auto text-sm bg-black/40 p-2 rounded space-y-1 border border-gray-600">
                             {logs.length > 0 ? (
-                                <>
-                                    {logs.map((log, i) => (
-                                        <div key={i} className={getLogColor(log.message)}>
-                                            <span className="text-gray-500">
-                                                [{formatLogTime(log.timestamp)}]
-                                            </span>{" "}
-                                            {log.message}
-                                        </div>
-                                    ))}
-                                    <div ref={logEndRef} />
-                                </>
+                                logs.map((log, i) => (
+                                    <div key={i}>
+                                        <span className="text-gray-500">[{dayjs(log.timestamp).format("HH:mm:ss")}]</span>{" "}
+                                        <span>{log.message}</span>
+                                    </div>
+                                ))
                             ) : (
                                 <p className="text-gray-400">No logs available</p>
                             )}
+                            <div ref={logEndRef} />
                         </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="mt-3 flex justify-start">
+                    {/* Refresh */}
+                    <div className="mt-4 flex justify-end">
                         <button
                             onClick={fetchData}
                             className="inline-flex items-center px-3 py-1 text-xs bg-indigo-600 rounded hover:bg-indigo-700"
