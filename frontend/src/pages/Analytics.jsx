@@ -2,141 +2,190 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-} from "recharts";
+    Cpu,
+    Database,
+    Network,
+    DollarSign,
+    HeartPulse,
+    Activity,
+    Filter,
+} from "lucide-react";
 
 export default function Analytics() {
     const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [dummyHistory, setDummyHistory] = useState([]);
+    const [viewMode, setViewMode] = useState("summary"); // "summary" | "drilldown"
+    const [filter, setFilter] = useState({ provider: "All", region: "All" });
 
-    // Fetch categories
-    const fetchAssets = () => {
-        fetch("/api/assets")
+    const fetchDiscovery = () => {
+        fetch("/api/discovery")
             .then((res) => res.json())
-            .then((data) => {
-                setCategories(data.categories || []);
-                if (!selectedCategory && data.categories?.length > 0) {
-                    setSelectedCategory(data.categories[0].name);
-                }
-            })
+            .then((data) => setCategories(data.categories || []))
             .catch(() => setCategories([]));
     };
 
-    // Dummy generator for metrics over time
-    const generateDummy = () => {
-        const now = new Date();
-        const points = [];
-        for (let i = 0; i < 20; i++) {
-            const t = new Date(now.getTime() - (20 - i) * 5000).toLocaleTimeString();
-            points.push({
-                time: t,
-                cpu: Math.random() * 100,
-                memory: Math.random() * 100,
-                fuel: Math.random() * 100,
-                temperature: 50 + Math.random() * 30,
-            });
-        }
-        setDummyHistory(points);
-    };
-
     useEffect(() => {
-        fetchAssets();
-        generateDummy();
-        const interval = setInterval(generateDummy, 5000);
+        fetchDiscovery();
+        const interval = setInterval(fetchDiscovery, 15000);
         return () => clearInterval(interval);
     }, []);
 
-    const selectedDevices =
-        categories.find((c) => c.name === selectedCategory)?.items || [];
+    // FAANG-style summary cards
+    const SummaryCard = ({ icon: Icon, title, value, color }) => (
+        <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 rounded-xl bg-white/5 border border-white/10 shadow-lg"
+        >
+            <div className="flex items-center space-x-3">
+                <Icon className={`w-6 h-6 ${color}`} />
+                <h3 className="text-lg font-semibold">{title}</h3>
+            </div>
+            <p className="text-3xl font-bold mt-3">{value}</p>
+        </motion.div>
+    );
+
+    // Aggregate values
+    const totalServers =
+        categories.find((c) => c.name === "Compute")?.resources.length || 0;
+    const totalDBs =
+        categories.find((c) => c.name === "Database")?.resources.length || 0;
+    const totalNetworks =
+        categories.find((c) => c.name === "Networking")?.resources.length || 0;
+    const totalMedical =
+        categories.find((c) => c.name === "Medical")?.resources.length || 0;
+
+    // Drilldown data (flat list)
+    const allResources = categories.flatMap((c) =>
+        c.resources.map((r) => ({ ...r, category: c.name }))
+    );
+
+    const filteredResources = allResources.filter(
+        (r) =>
+            (filter.provider === "All" || r.provider === filter.provider) &&
+            (filter.region === "All" || r.region === filter.region)
+    );
+
+    // Unique filters
+    const providers = ["All", ...new Set(allResources.map((r) => r.provider))];
+    const regions = ["All", ...new Set(allResources.map((r) => r.region))];
 
     return (
         <div className="p-8 text-white">
-            <h2 className="text-2xl font-bold mb-6">📊 Analytics Dashboard</h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-extrabold tracking-wide flex items-center space-x-3">
+                    <Activity className="w-8 h-8 text-indigo-400 animate-pulse" />
+                    <span>Analytics Dashboard</span>
+                </h2>
 
-            {/* Category Selector */}
-            <div className="mb-6">
-                <label className="mr-3 font-semibold">Select Category:</label>
-                <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="p-2 rounded bg-black/40 border border-gray-600"
+                {/* Toggle View Mode */}
+                <button
+                    onClick={() =>
+                        setViewMode(viewMode === "summary" ? "drilldown" : "summary")
+                    }
+                    className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 text-sm font-semibold flex items-center space-x-2"
                 >
-                    {categories.map((cat, i) => (
-                        <option key={i} value={cat.name}>
-                            {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                        </option>
-                    ))}
-                </select>
+                    <Filter className="w-4 h-4" />
+                    <span>
+                        {viewMode === "summary" ? "Switch to Drilldown" : "Back to Summary"}
+                    </span>
+                </button>
             </div>
 
-            {selectedDevices.length === 0 ? (
-                <p>No devices in this category.</p>
+            {viewMode === "summary" ? (
+                // ===== Summary Mode =====
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <SummaryCard
+                        icon={Cpu}
+                        title="Total Servers"
+                        value={totalServers}
+                        color="text-indigo-400"
+                    />
+                    <SummaryCard
+                        icon={Database}
+                        title="Databases"
+                        value={totalDBs}
+                        color="text-blue-400"
+                    />
+                    <SummaryCard
+                        icon={Network}
+                        title="Networks"
+                        value={totalNetworks}
+                        color="text-yellow-400"
+                    />
+                    <SummaryCard
+                        icon={HeartPulse}
+                        title="Medical Devices"
+                        value={totalMedical}
+                        color="text-red-400"
+                    />
+                </div>
             ) : (
-                <div className="grid gap-8">
-                    {selectedDevices.map((device, idx) => (
-                        <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="p-6 bg-white/10 rounded-lg shadow-lg"
+                // ===== Drilldown Mode =====
+                <div className="bg-black/40 p-6 rounded-xl shadow-lg border border-white/10">
+                    {/* Filters */}
+                    <div className="flex space-x-4 mb-4">
+                        <select
+                            value={filter.provider}
+                            onChange={(e) =>
+                                setFilter((f) => ({ ...f, provider: e.target.value }))
+                            }
+                            className="bg-black/40 border border-gray-600 rounded px-3 py-1"
                         >
-                            <h3 className="text-xl font-semibold mb-4">
-                                {device.name}
-                            </h3>
-                            <div className="h-72">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={dummyHistory}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#555" />
-                                        <XAxis dataKey="time" stroke="#aaa" />
-                                        <YAxis stroke="#aaa" />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: "#111",
-                                                border: "1px solid #333",
-                                                color: "#fff",
-                                            }}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="cpu"
-                                            stroke="#6366f1"
-                                            strokeWidth={2}
-                                            dot={false}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="memory"
-                                            stroke="#22c55e"
-                                            strokeWidth={2}
-                                            dot={false}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="fuel"
-                                            stroke="#eab308"
-                                            strokeWidth={2}
-                                            dot={false}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="temperature"
-                                            stroke="#f97316"
-                                            strokeWidth={2}
-                                            dot={false}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </motion.div>
-                    ))}
+                            {providers.map((p) => (
+                                <option key={p}>{p}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={filter.region}
+                            onChange={(e) =>
+                                setFilter((f) => ({ ...f, region: e.target.value }))
+                            }
+                            className="bg-black/40 border border-gray-600 rounded px-3 py-1"
+                        >
+                            {regions.map((r) => (
+                                <option key={r}>{r}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead>
+                                <tr className="bg-white/10">
+                                    <th className="px-4 py-2">Name</th>
+                                    <th className="px-4 py-2">Category</th>
+                                    <th className="px-4 py-2">Provider</th>
+                                    <th className="px-4 py-2">Region</th>
+                                    <th className="px-4 py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredResources.map((r, i) => (
+                                    <tr
+                                        key={i}
+                                        className="border-b border-white/10 hover:bg-white/5"
+                                    >
+                                        <td className="px-4 py-2">{r.name}</td>
+                                        <td className="px-4 py-2">{r.category}</td>
+                                        <td className="px-4 py-2">{r.provider}</td>
+                                        <td className="px-4 py-2">{r.region}</td>
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className={`px-2 py-1 rounded-full text-xs font-bold ${r.status === "running" ||
+                                                        r.status === "available" ||
+                                                        r.status === "connected"
+                                                        ? "bg-green-600 text-white"
+                                                        : "bg-red-600 text-white"
+                                                    }`}
+                                            >
+                                                {r.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

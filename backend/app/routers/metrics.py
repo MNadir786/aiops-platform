@@ -1,27 +1,36 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response, Query
 from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
 import psutil
 import datetime
 import docker
 import threading
 import time
+import httpx
 
 router = APIRouter()
 
-# Try to init Docker client (optional, for container stats)
+# -------------------------------
+# Docker client (optional)
+# -------------------------------
 try:
     docker_client = docker.from_env()
 except Exception:
     docker_client = None
 
-# Prometheus metrics
+# -------------------------------
+# Prometheus Gauges (local export)
+# -------------------------------
 cpu_usage_gauge = Gauge("aiops_cpu_usage_percent", "CPU usage percentage")
 mem_usage_gauge = Gauge("aiops_memory_usage_percent", "Memory usage percentage")
 
-# Global state for smoother metrics
+# -------------------------------
+# Global state
+# -------------------------------
 metrics_state = {"cpu": 0.0, "memory": 0.0}
 
-
+# -------------------------------
+# Docker metrics collection
+# -------------------------------
 def collect_docker_metrics():
     """Collect CPU & memory usage from running containers if Docker is available."""
     metrics = {}
@@ -74,9 +83,11 @@ def collect_docker_metrics():
     except Exception:
         return None
 
-
+# -------------------------------
+# Background thread collector
+# -------------------------------
 def metrics_collector():
-    """Background thread to continuously collect CPU & memory usage."""
+    """Continuously collect CPU & memory usage."""
     while True:
         try:
             # Prefer Docker metrics if available
@@ -104,18 +115,20 @@ def metrics_collector():
 
         time.sleep(1)
 
-
-# Start background thread
 thread = threading.Thread(target=metrics_collector, daemon=True)
 thread.start()
 
-
+# -------------------------------
+# Prometheus scrape endpoint
+# -------------------------------
 @router.get("/metrics")
 def get_metrics_prometheus():
     """Expose metrics in Prometheus format."""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-
+# -------------------------------
+# JSON snapshot endpoint
+# -------------------------------
 @router.get("/metrics/json")
 def get_metrics_json():
     """Expose metrics in JSON format for frontend/cockpit."""
@@ -127,3 +140,36 @@ def get_metrics_json():
         "timestamp": datetime.datetime.now().isoformat(),
         "mode": "docker" if docker_client else "local",
     }
+
+# -------------------------------
+# Prometheus query proxy
+# -------------------------------
+PROMETHEUS_URL = "http://prometheus:9090/api/v1"
+
+async def query_prometheus(query: str, range: bool = False, start: str = None, end: str = None, step: str = "30s"):
+    url = f"{PROMETHEUS_URL}/query_range" if range else f"{PROMETHEUS_URL}/query"
+    params = {"query": query}
+    if range:
+        params.update({"start": start, "end": end, "step": step})
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, params=params)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=500, detail="Prometheus query failed")
+        return resp.json()
+
+@router.get("/metrics/prometheus/cpu")
+async def get_cpu_prometheus(node: str = Query(None)):
+    """Historical CPU usage from Prometheus."""
+    q = '100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)'
+    if node:
+        q = f'100 - (avg by (instance) (irate(node_cpu_seconds_total{{mode="idle",instance="{node}"}}[5m])) * 100)'
+    return await query_prometheus(q, range=True, start="now-15m", end="now", step="30s")
+
+@router.get("/metrics/prometheus/memory")
+async def get_memory_prometheus(node: str = Query(None)):
+    """Historical Memory usage from Prometheus."""
+    q = '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100'
+    if node:
+        q = f'(1 - (node_memory_MemAvailable_bytes{{instance="{node}"}} / node_memory_MemTotal_bytes{{instance="{node}"}})) * 100'
+    return await query_prometheus(q, range=True, start="now-15m", end="now", step="30s")

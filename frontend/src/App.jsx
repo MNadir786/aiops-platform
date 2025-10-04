@@ -1,4 +1,4 @@
-// frontend/src/App.jsx
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 
@@ -6,7 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Logs from "./pages/Logs";
 import Remediation from "./pages/Remediation";
-import Discovery from "./pages/Discovery"; // ✅ New Discovery page
+import Discovery from "./pages/Discovery"; // ✅ replaced Assets
 import Analytics from "./pages/Analytics";
 
 function AppContent() {
