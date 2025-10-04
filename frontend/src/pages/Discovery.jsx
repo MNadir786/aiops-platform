@@ -1,145 +1,142 @@
 // frontend/src/pages/Discovery.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-    Server,
-    Database,
-    Globe,
-    Shield,
-    Cloud,
-    Cpu,
-    BarChart2,
-    ChevronDown,
-    ChevronUp,
-} from "lucide-react";
-import DevicePanel from "../components/DevicePanel";
+import dayjs from "dayjs";
 
+// -------------------------------
+// Logo mapping (use real logos/icons)
+// -------------------------------
+const logos = {
+    AWS: "https://cdn.worldvectorlogo.com/logos/aws-2.svg",
+    Azure: "https://cdn.worldvectorlogo.com/logos/microsoft-azure-3.svg",
+    GCP: "https://cdn.worldvectorlogo.com/logos/google-cloud-1.svg",
+    OnPrem: "https://cdn-icons-png.flaticon.com/512/2965/2965567.png",
+    Medical: "https://cdn-icons-png.flaticon.com/512/2966/2966485.png",
+    Grafana: "https://grafana.com/static/assets/img/fav32.png",
+    Prometheus: "https://upload.wikimedia.org/wikipedia/commons/3/38/Prometheus_software_logo.svg",
+};
+
+// -------------------------------
+// Discovery Page
+// -------------------------------
 export default function Discovery() {
     const [categories, setCategories] = useState([]);
-    const [expandedCategory, setExpandedCategory] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-    // Fetch assets
-    const fetchAssets = async () => {
-        try {
-            const res = await fetch("/api/assets");
-            const data = await res.json();
-            if (data.categories?.length > 0) {
-                setCategories(data.categories);
-            } else {
-                // Dummy fallback: multi-cloud catalog
-                setCategories([
-                    {
-                        name: "AWS",
-                        items: [
-                            { id: 1, name: "EC2 Instance (us-east-1)", status: "running" },
-                            { id: 2, name: "RDS Database", status: "available" },
-                        ],
-                    },
-                    {
-                        name: "Azure",
-                        items: [
-                            { id: 3, name: "VM Scale Set", status: "running" },
-                            { id: 4, name: "Azure SQL DB", status: "online" },
-                        ],
-                    },
-                    {
-                        name: "GCP",
-                        items: [
-                            { id: 5, name: "GKE Cluster", status: "active" },
-                            { id: 6, name: "Cloud Storage Bucket", status: "healthy" },
-                        ],
-                    },
-                    {
-                        name: "On-Prem",
-                        items: [
-                            { id: 7, name: "Kubernetes Node", status: "running" },
-                            { id: 8, name: "Firewall Appliance", status: "online" },
-                        ],
-                    },
-                ]);
-            }
-        } catch (err) {
-            console.error("Error fetching assets:", err);
-        }
+    const fetchDiscovery = () => {
+        setLoading(true);
+        fetch("/api/discovery")
+            .then((res) => res.json())
+            .then((data) => {
+                setCategories(data.categories || []);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
     };
 
     useEffect(() => {
-        fetchAssets();
-        const interval = setInterval(fetchAssets, 15000);
-        return () => clearInterval(interval);
+        fetchDiscovery();
     }, []);
 
-    const toggleCategory = (name) => {
-        setExpandedCategory(expandedCategory === name ? null : name);
-    };
-
-    const getCategoryIcon = (name) => {
-        if (/aws/i.test(name)) return <Cloud className="text-orange-400" />;
-        if (/azure/i.test(name)) return <Cloud className="text-blue-400" />;
-        if (/gcp/i.test(name)) return <Cloud className="text-red-400" />;
-        if (/database/i.test(name)) return <Database className="text-green-400" />;
-        if (/network/i.test(name)) return <Globe className="text-yellow-400" />;
-        if (/security/i.test(name)) return <Shield className="text-indigo-400" />;
-        return <Server className="text-gray-400" />;
-    };
+    const formatDate = (ts) => (ts ? dayjs(ts).format("MMM D, HH:mm:ss") : "n/a");
 
     return (
         <div className="p-8 text-white">
-            <h2 className="text-2xl font-bold mb-6">🌐 Discovery Catalog</h2>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-extrabold">🔍 Resource Discovery</h2>
+                <button
+                    onClick={fetchDiscovery}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded shadow"
+                >
+                    Trigger Discovery
+                </button>
+            </div>
 
-            {categories.length === 0 ? (
+            {loading ? (
+                <p className="text-gray-400">Running discovery...</p>
+            ) : categories.length === 0 ? (
                 <p>No resources discovered yet.</p>
             ) : (
                 categories.map((cat, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="mb-6 rounded-lg shadow-lg bg-white/10"
+                        className="mb-8 p-6 bg-white/10 rounded-lg shadow-lg"
                     >
-                        {/* Category Header */}
-                        <button
-                            onClick={() => toggleCategory(cat.name)}
-                            className="w-full flex items-center justify-between px-4 py-3 text-left font-semibold text-lg"
-                        >
-                            <span className="flex items-center space-x-3">
-                                {getCategoryIcon(cat.name)}
-                                <span className="uppercase">{cat.name}</span>
-                            </span>
-                            {expandedCategory === cat.name ? (
-                                <ChevronUp className="w-5 h-5" />
-                            ) : (
-                                <ChevronDown className="w-5 h-5" />
-                            )}
-                        </button>
+                        <h3 className="text-xl font-bold mb-4 flex items-center space-x-3">
+                            <span className="capitalize">{cat.name}</span>
+                        </h3>
 
-                        {/* Category Body */}
-                        {expandedCategory === cat.name && (
-                            <div className="px-6 pb-4">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {cat.items.map((item, j) => (
-                                        <div
-                                            key={j}
-                                            className="bg-black/40 p-4 rounded-lg shadow-lg hover:bg-black/60 transition"
-                                        >
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold">{item.name}</span>
-                                                <span className="text-sm text-green-400">
-                                                    {item.status}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                Discovered via {cat.name}
-                                            </p>
-                                            <div className="mt-3">
-                                                <DevicePanel category={cat.name} device={item} />
-                                            </div>
+                        {/* Grid of resources */}
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {cat.resources.map((res, j) => (
+                                <motion.div
+                                    key={j}
+                                    whileHover={{ scale: 1.02 }}
+                                    className="bg-black/40 p-4 rounded-lg border border-gray-700 shadow"
+                                >
+                                    {/* Provider logo */}
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center space-x-2">
+                                            {logos[res.provider] && (
+                                                <img
+                                                    src={logos[res.provider]}
+                                                    alt={res.provider}
+                                                    className="w-6 h-6"
+                                                />
+                                            )}
+                                            <h4 className="font-semibold">{res.name}</h4>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                        <span
+                                            className={`px-2 py-1 text-xs rounded ${res.status === "running" ||
+                                                    res.status === "available" ||
+                                                    res.status === "connected" ||
+                                                    res.status === "operational"
+                                                    ? "bg-green-600"
+                                                    : res.status === "stopped" ||
+                                                        res.status === "degraded"
+                                                        ? "bg-yellow-600"
+                                                        : "bg-red-600"
+                                                }`}
+                                        >
+                                            {res.status}
+                                        </span>
+                                    </div>
+
+                                    {/* Details */}
+                                    <ul className="text-sm space-y-1 text-gray-300">
+                                        <li>
+                                            <span className="font-semibold">Type:</span> {res.type}
+                                        </li>
+                                        <li>
+                                            <span className="font-semibold">Provider:</span>{" "}
+                                            {res.provider}
+                                        </li>
+                                        <li>
+                                            <span className="font-semibold">Region:</span>{" "}
+                                            {res.region}
+                                        </li>
+                                        <li>
+                                            <span className="font-semibold">Discovered:</span>{" "}
+                                            {formatDate(res.discovered_at)}
+                                        </li>
+
+                                        {/* Special attributes (if exist) */}
+                                        {res.tags &&
+                                            Object.entries(res.tags).map(([k, v]) => (
+                                                <li key={k}>
+                                                    <span className="font-semibold capitalize">
+                                                        {k}:
+                                                    </span>{" "}
+                                                    {v}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                </motion.div>
+                            ))}
+                        </div>
                     </motion.div>
                 ))
             )}

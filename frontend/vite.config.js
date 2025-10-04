@@ -11,7 +11,7 @@ module.exports = defineConfig({
     server: {
         proxy: {
             "/api": {
-                target: "http://localhost:8000", // FastAPI backend
+                target: "http://localhost:3301", // FastAPI backend
                 changeOrigin: true,
             },
         },
