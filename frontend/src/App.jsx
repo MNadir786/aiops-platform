@@ -1,4 +1,4 @@
-// src/App.jsx
+// frontend/src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 
@@ -6,8 +6,10 @@ import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Logs from "./pages/Logs";
 import Remediation from "./pages/Remediation";
-import Discovery from "./pages/Discovery"; // ✅ replaced Assets
+import Discovery from "./pages/Discovery";
 import Analytics from "./pages/Analytics";
+import AgentDetails from "./pages/AgentDetails";
+import Settings from "./pages/Settings"; // ✅ ADD THIS
 
 function AppContent() {
   return (
@@ -61,8 +63,10 @@ function AppContent() {
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/remediation" element={<Remediation />} />
-            <Route path="/discovery" element={<Discovery />} /> {/* ✅ Updated */}
+            <Route path="/discovery" element={<Discovery />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/agent/:agentId" element={<AgentDetails />} />
+            <Route path="/settings" element={<Settings />} /> {/* ✅ NOW ADDED */}
           </Routes>
         </div>
       </div>

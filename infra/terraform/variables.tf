@@ -1,5 +1,5 @@
-variable "aws_region" {
-  description = "AWS region for deployment"
+variable "prometheus_password" {
+  description = "Secure Prometheus admin password"
   type        = string
-  default     = "us-east-1"
+  sensitive   = true
 }

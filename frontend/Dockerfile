@@ -1,27 +1,46 @@
-# Stage 1: Build React app with Vite
+# ======================================
+# Stage 1 — Build React app (Vite)
+# ======================================
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Copy dependencies and install
+# Copy dependency manifests and install
 COPY package*.json ./
-RUN npm install
+RUN npm ci || npm install --frozen-lockfile
 
-# Copy source and build
+# Copy the rest of the app
 COPY . .
+
+# -------------------------------------------------
+# Inject build-time API base URL (default fallback)
+# -------------------------------------------------
+ARG VITE_API_BASE
+ENV VITE_API_BASE=${VITE_API_BASE:-http://backend:8000/api}
+
+# Build optimized static assets
 RUN npm run build
 
-# Stage 2: Serve with Nginx
+# ======================================
+# Stage 2 — Runtime (Nginx)
+# ======================================
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
-# Remove default nginx static assets
+# Clean existing static assets
 RUN rm -rf ./*
 
-# Copy built files from builder
+# Copy build output
 COPY --from=build /app/dist .
 
-# Copy custom nginx config
+# Copy Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# -------------------------------------------------
+# Inject runtime environment for dynamic backend URLs
+# -------------------------------------------------
+# This file is read by index.html before React loads
+RUN echo "window._env_ = { VITE_API_BASE: '${VITE_API_BASE:-http://backend:8000/api}' };" \
+    > /usr/share/nginx/html/env.js
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

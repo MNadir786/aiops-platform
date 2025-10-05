@@ -1,3 +1,4 @@
+// frontend/src/pages/Settings.jsx
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Key, Shield, Network, Users, Cog } from "lucide-react";
@@ -5,138 +6,84 @@ import { Key, Shield, Network, Users, Cog } from "lucide-react";
 const API_BASE = "/api/settings";
 
 export default function Settings() {
-    const [activeTab, setActiveTab] = useState("api-keys");
+    const [activeTab, setActiveTab] = useState("general");
 
     // -------------------------------
     // Shared Fetcher
     // -------------------------------
     const fetcher = async (endpoint, method = "GET", body) => {
-        const res = await fetch(`${API_BASE}/${endpoint}`, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: body ? JSON.stringify(body) : undefined,
-        });
-        if (!res.ok) {
-            console.error(`❌ Fetch failed: ${res.status} ${res.statusText} (${endpoint})`);
-            return [];
+        try {
+            const res = await fetch(`${API_BASE}/${endpoint}`, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: body ? JSON.stringify(body) : undefined,
+            });
+            if (!res.ok) throw new Error(`Error: ${res.status}`);
+            return res.json();
+        } catch {
+            return null; // fallback → demo defaults
         }
-        return res.json();
     };
 
     // -------------------------------
-    // API Keys
+    // Default Demo Values (always render)
     // -------------------------------
-    const [apiKeys, setApiKeys] = useState([]);
-    const [newKey, setNewKey] = useState({ name: "", provider: "", key: "" });
-
-    const loadKeys = async () => {
-        const data = await fetcher("api-keys/"); // ✅ trailing slash
-        setApiKeys(data);
+    const defaultGeneral = {
+        company_name: "Acme Corp (Demo Data)",
+        theme: "dark",
+        notifications_enabled: true,
     };
-
-    const addKey = async () => {
-        await fetcher("api-keys/", "POST", newKey);
-        setNewKey({ name: "", provider: "", key: "" });
-        loadKeys();
+    const defaultNetwork = {
+        allow_private: true,
+        allowed_cidrs: ["10.0.0.0/16", "192.168.0.0/24 (Demo Data)"],
     };
-
-    const deleteKey = async (id) => {
-        await fetcher(`api-keys/${id}/`, "DELETE");
-        loadKeys();
+    const defaultCompliance = {
+        hipaa: true,
+        gdpr: false,
+        soc2: true,
     };
-
-    // -------------------------------
-    // RBAC
-    // -------------------------------
-    const [roles, setRoles] = useState([]);
-    const [newRole, setNewRole] = useState({ user: "", role: "" });
-
-    const loadRoles = async () => {
-        const data = await fetcher("rbac/"); // ✅
-        setRoles(data);
-    };
-
-    const addRole = async () => {
-        await fetcher("rbac/", "POST", newRole);
-        setNewRole({ user: "", role: "" });
-        loadRoles();
-    };
-
-    const deleteRole = async (id) => {
-        await fetcher(`rbac/${id}/`, "DELETE");
-        loadRoles();
-    };
+    const defaultRoles = [
+        { id: "1", user: "admin@corp.com", role: "admin (Demo Data)" },
+        { id: "2", user: "viewer@corp.com", role: "viewer (Demo Data)" },
+    ];
+    const defaultKeys = [
+        { id: "1", name: "Prometheus", provider: "infra", key_hint: "****1234 (Demo Data)" },
+        { id: "2", name: "Grafana", provider: "monitoring", key_hint: "****5678 (Demo Data)" },
+    ];
 
     // -------------------------------
-    // Compliance
+    // State (defaults first, backend overrides)
     // -------------------------------
-    const [compliance, setCompliance] = useState({ hipaa: false, gdpr: false, soc2: false });
+    const [general, setGeneral] = useState(defaultGeneral);
+    const [network, setNetwork] = useState(defaultNetwork);
+    const [compliance, setCompliance] = useState(defaultCompliance);
+    const [roles, setRoles] = useState(defaultRoles);
+    const [apiKeys, setApiKeys] = useState(defaultKeys);
 
-    const loadCompliance = async () => {
-        const data = await fetcher("compliance/"); // ✅
-        setCompliance(data);
-    };
-
-    const updateCompliance = async () => {
-        await fetcher("compliance/", "PUT", compliance);
-        loadCompliance();
-    };
-
-    // -------------------------------
-    // Network
-    // -------------------------------
-    const [network, setNetwork] = useState({ allow_private: true, allowed_cidrs: [] });
-
-    const loadNetwork = async () => {
-        const data = await fetcher("network/"); // ✅
-        setNetwork(data);
-    };
-
-    const updateNetwork = async () => {
-        await fetcher("network/", "PUT", network);
-        loadNetwork();
-    };
-
-    // -------------------------------
-    // General
-    // -------------------------------
-    const [general, setGeneral] = useState({ company_name: "", theme: "dark", notifications_enabled: true });
-
-    const loadGeneral = async () => {
-        const data = await fetcher("general/"); // ✅
-        setGeneral(data);
-    };
-
-    const updateGeneral = async () => {
-        await fetcher("general/", "PUT", general);
-        loadGeneral();
-    };
-
-    // -------------------------------
-    // Init Loader
-    // -------------------------------
     useEffect(() => {
-        loadKeys();
-        loadRoles();
-        loadCompliance();
-        loadNetwork();
-        loadGeneral();
+        (async () => {
+            const g = await fetcher("general"); if (g) setGeneral(g);
+            const n = await fetcher("network"); if (n) setNetwork(n);
+            const c = await fetcher("compliance"); if (c) setCompliance(c);
+            const r = await fetcher("rbac"); if (r) setRoles(r);
+            const k = await fetcher("api-keys"); if (k) setApiKeys(k);
+        })();
     }, []);
 
     // -------------------------------
-    // UI Renderer
+    // UI Tabs
     // -------------------------------
     const tabs = [
-        { id: "api-keys", label: "API Keys", icon: Key },
-        { id: "rbac", label: "RBAC", icon: Users },
-        { id: "compliance", label: "Compliance", icon: Shield },
-        { id: "network", label: "Network", icon: Network },
         { id: "general", label: "General", icon: Cog },
+        { id: "network", label: "Network", icon: Network },
+        { id: "compliance", label: "Compliance", icon: Shield },
+        { id: "rbac", label: "RBAC", icon: Users },
+        { id: "api-keys", label: "API Keys", icon: Key },
     ];
 
     return (
         <div className="p-8 text-white">
-            <h2 className="text-2xl font-bold mb-6">⚙️ Settings</h2>
+            <h2 className="text-2xl font-bold mb-6">⚙️ Settings (Demo Mode Enabled)</h2>
 
             {/* Tabs */}
             <div className="flex space-x-4 border-b border-gray-700 mb-6">
@@ -155,135 +102,68 @@ export default function Settings() {
                 ))}
             </div>
 
-            {/* Content */}
-            {activeTab === "api-keys" && (
+            {/* ----------------- General ----------------- */}
+            {activeTab === "general" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 className="text-xl mb-4">🔑 API Keys</h3>
-                    <div className="space-y-2">
-                        {apiKeys.map((k) => (
-                            <div key={k.id} className="flex justify-between bg-black/40 p-3 rounded">
-                                <span>{k.name} ({k.provider}) — {k.key_hint}</span>
-                                <button onClick={() => deleteKey(k.id)} className="text-red-500 hover:underline">Delete</button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-4 flex space-x-2">
-                        <input
-                            placeholder="Name"
-                            value={newKey.name}
-                            onChange={(e) => setNewKey({ ...newKey, name: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <input
-                            placeholder="Provider"
-                            value={newKey.provider}
-                            onChange={(e) => setNewKey({ ...newKey, provider: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <input
-                            placeholder="Key"
-                            value={newKey.key}
-                            onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <button onClick={addKey} className="px-3 py-1 bg-indigo-600 rounded hover:bg-indigo-700">Add</button>
+                    <h3 className="text-xl mb-4">⚙️ General Settings</h3>
+                    <div className="space-y-3 bg-black/30 p-4 rounded-xl border border-gray-700">
+                        <p><strong>Company Name:</strong> {general.company_name}</p>
+                        <p><strong>Theme:</strong> {general.theme}</p>
+                        <p><strong>Notifications:</strong> {general.notifications_enabled ? "Enabled" : "Disabled"}</p>
                     </div>
                 </motion.div>
             )}
 
-            {activeTab === "rbac" && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 className="text-xl mb-4">👥 Role-Based Access Control</h3>
-                    <div className="space-y-2">
-                        {roles.map((r) => (
-                            <div key={r.id} className="flex justify-between bg-black/40 p-3 rounded">
-                                <span>{r.user} → {r.role}</span>
-                                <button onClick={() => deleteRole(r.id)} className="text-red-500 hover:underline">Remove</button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-4 flex space-x-2">
-                        <input
-                            placeholder="User"
-                            value={newRole.user}
-                            onChange={(e) => setNewRole({ ...newRole, user: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <input
-                            placeholder="Role"
-                            value={newRole.role}
-                            onChange={(e) => setNewRole({ ...newRole, role: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <button onClick={addRole} className="px-3 py-1 bg-indigo-600 rounded hover:bg-indigo-700">Add</button>
-                    </div>
-                </motion.div>
-            )}
-
-            {activeTab === "compliance" && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 className="text-xl mb-4">🛡 Compliance Settings</h3>
-                    {["hipaa", "gdpr", "soc2"].map((c) => (
-                        <label key={c} className="block">
-                            <input
-                                type="checkbox"
-                                checked={compliance[c]}
-                                onChange={(e) => setCompliance({ ...compliance, [c]: e.target.checked })}
-                            />{" "}
-                            {c.toUpperCase()}
-                        </label>
-                    ))}
-                    <button onClick={updateCompliance} className="mt-3 px-3 py-1 bg-green-600 rounded hover:bg-green-700">Save</button>
-                </motion.div>
-            )}
-
+            {/* ----------------- Network ----------------- */}
             {activeTab === "network" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <h3 className="text-xl mb-4">🌐 Network Settings</h3>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={network.allow_private}
-                            onChange={(e) => setNetwork({ ...network, allow_private: e.target.checked })}
-                        /> Allow Private Access
-                    </label>
-                    <div className="mt-3">
-                        <textarea
-                            value={network.allowed_cidrs.join("\n")}
-                            onChange={(e) => setNetwork({ ...network, allowed_cidrs: e.target.value.split("\n") })}
-                            className="w-full h-24 rounded bg-gray-800 border border-gray-600 p-2"
-                        />
+                    <div className="space-y-3 bg-black/30 p-4 rounded-xl border border-gray-700">
+                        <p><strong>Private Access:</strong> {network.allow_private ? "Allowed" : "Blocked"}</p>
+                        <p><strong>Allowed CIDRs:</strong></p>
+                        <ul className="list-disc ml-6">
+                            {network.allowed_cidrs.map((cidr, i) => (
+                                <li key={i}>{cidr}</li>
+                            ))}
+                        </ul>
                     </div>
-                    <button onClick={updateNetwork} className="mt-3 px-3 py-1 bg-green-600 rounded hover:bg-green-700">Save</button>
                 </motion.div>
             )}
 
-            {activeTab === "general" && (
+            {/* ----------------- Compliance ----------------- */}
+            {activeTab === "compliance" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 className="text-xl mb-4">⚙️ General</h3>
-                    <div className="flex flex-col space-y-2">
-                        <input
-                            placeholder="Company Name"
-                            value={general.company_name}
-                            onChange={(e) => setGeneral({ ...general, company_name: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        />
-                        <select
-                            value={general.theme}
-                            onChange={(e) => setGeneral({ ...general, theme: e.target.value })}
-                            className="px-2 py-1 rounded bg-gray-800 border border-gray-600"
-                        >
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
-                        </select>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={general.notifications_enabled}
-                                onChange={(e) => setGeneral({ ...general, notifications_enabled: e.target.checked })}
-                            /> Enable Notifications
-                        </label>
-                        <button onClick={updateGeneral} className="px-3 py-1 bg-green-600 rounded hover:bg-green-700">Save</button>
+                    <h3 className="text-xl mb-4">🛡 Compliance</h3>
+                    <div className="space-y-2 bg-black/30 p-4 rounded-xl border border-gray-700">
+                        {Object.entries(compliance).map(([key, val]) => (
+                            <p key={key}>
+                                <strong>{key.toUpperCase()}:</strong> {val ? "✅ Enabled" : "❌ Disabled"}
+                            </p>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ----------------- RBAC ----------------- */}
+            {activeTab === "rbac" && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 className="text-xl mb-4">👥 Role-Based Access Control</h3>
+                    <div className="space-y-2 bg-black/30 p-4 rounded-xl border border-gray-700">
+                        {roles.map((r) => (
+                            <p key={r.id}>{r.user} → {r.role}</p>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ----------------- API Keys ----------------- */}
+            {activeTab === "api-keys" && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 className="text-xl mb-4">🔑 API Keys</h3>
+                    <div className="space-y-2 bg-black/30 p-4 rounded-xl border border-gray-700">
+                        {apiKeys.map((k) => (
+                            <p key={k.id}>{k.name} ({k.provider}) — {k.key_hint}</p>
+                        ))}
                     </div>
                 </motion.div>
             )}

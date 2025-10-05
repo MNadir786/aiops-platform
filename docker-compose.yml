@@ -1,54 +1,125 @@
 version: "3.9"
 
+# ==========================
+# X-Reach AIOps Platform (FAANG-Grade Security)
+# ==========================
+
 services:
+  # -------------------------
+  # FRONTEND (React + Nginx)
+  # -------------------------
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE: http://backend:8000/api
     container_name: aiops-platform-frontend
     ports:
-      - "3300:80" # Frontend UI at http://localhost:3300
+      - "${FRONTEND_PORT:-3300}:80"
     depends_on:
       - backend
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    networks:
+      - frontend_net
 
+  # -------------------------
+  # BACKEND (FastAPI + AWS + Prometheus)
+  # -------------------------
   backend:
     build: ./backend
     container_name: aiops-platform-backend
     ports:
-      - "3301:8000" # FastAPI backend at http://localhost:3301
+      - "${BACKEND_PORT:-3301}:8000"
     restart: unless-stopped
+    volumes:
+      - ~/.aws:/root/.aws:ro
     environment:
-      - METRICS_MODE=local
-      - PROMETHEUS_URL=http://prometheus:9090
+      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
+      METRICS_MODE: ${METRICS_MODE:-prometheus}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3300}
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - prometheus
+    networks:
+      - frontend_net
+      - observability_net
 
+  # -------------------------
+  # PROMETHEUS (Metrics Ingestion)
+  # -------------------------
   prometheus:
     image: prom/prometheus:latest
     container_name: aiops-platform-prometheus
     ports:
-      - "9090:9090" # Prometheus UI at http://localhost:9090
+      - "9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - observability_net
 
+  # -------------------------
+  # GRAFANA (Visualization)
+  # -------------------------
   grafana:
     image: grafana/grafana:latest
     container_name: aiops-platform-grafana
     ports:
-      - "3001:3000" # Grafana UI at http://localhost:3001
+      - "3001:3000"
     depends_on:
       - prometheus
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # ✅ Use Docker secrets or AWS Secrets Manager for production
+      GF_SECURITY_ADMIN_USER_FILE: /run/secrets/grafana_user
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_pass
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    secrets:
+      - grafana_user
+      - grafana_pass
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - observability_net
 
+# -------------------------
+# SECRETS (Runtime only)
+# -------------------------
+secrets:
+  grafana_user:
+    file: ./security/secrets/grafana_user.txt
+  grafana_pass:
+    file: ./security/secrets/grafana_pass.txt
+
+# -------------------------
+# VOLUMES
+# -------------------------
 volumes:
   grafana_data:
 
-
+    # -------------------------
+    # NETWORKS (Isolated Zones)
+    # -------------------------
 networks:
-  default:
-    name: aiops-platform-network
+  frontend_net:
+    driver: bridge
+  observability_net:
+    driver: bridge

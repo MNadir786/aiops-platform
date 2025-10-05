@@ -1,4 +1,4 @@
-// src/components/Sidebar.jsx
+// frontend/src/components/Sidebar.jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -6,11 +6,10 @@ import {
     Bell,
     FileText,
     Wrench,
-    Activity,
-    Settings,
+    Search,
     Plug,
     Shield,
-    Search,
+    Settings,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -22,14 +21,14 @@ export default function Sidebar() {
         { icon: Bell, label: "Alerts", path: "/alerts" },
         { icon: FileText, label: "Logs", path: "/logs" },
         { icon: Wrench, label: "Remediation", path: "/remediation" },
-        { icon: Search, label: "Discovery", path: "/discovery" }, // ✅ Updated
-        { icon: Activity, label: "Analytics", path: "/analytics" },
+        { icon: Search, label: "Discovery", path: "/discovery" },
+        { icon: BarChart3, label: "Analytics", path: "/analytics" },
     ];
 
     const enterpriseLinks = [
         { icon: Plug, label: "Integrations", path: "/integrations" },
         { icon: Shield, label: "Audit Logs", path: "/audit-logs" },
-        { icon: Settings, label: "Settings", path: "/settings" },
+        { icon: Settings, label: "Settings", path: "/settings" }, // ✅ Settings included
     ];
 
     return (

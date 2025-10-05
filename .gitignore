@@ -12,6 +12,7 @@ Thumbs.db
 # Environment & Secrets
 # -------------------------
 .env
+.env.sample
 .env.local
 *.pem
 *.key
@@ -79,3 +80,7 @@ report.xml
 *.bak
 *.tmp
 *.old
+
+# 🔐 Local Secrets
+/security/secrets/*
+!security/secrets/.keep
